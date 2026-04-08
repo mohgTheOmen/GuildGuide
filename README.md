@@ -8,3 +8,4 @@ A webpage dedicated to bringing you all the relevant game guides in a single pla
 - As an administrator, I want to manage and maintain the platform to ensure a smooth experience for users and creators while supporting the growth and monetization of the service.
 
 - Figma Link: https://www.figma.com/design/plCtbCNK9kwlTPqqqd4WsX/GuildGuide?node-id=0-1&t=Ijk4FpFF1hMgY6Y1-1
+- User Persona: https://app.creately.com/d/vVJasbxXbcE/edit
