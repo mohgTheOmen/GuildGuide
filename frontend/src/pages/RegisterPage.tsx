@@ -13,7 +13,7 @@ const RegisterPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
@@ -27,12 +27,27 @@ const RegisterPage: React.FC = () => {
     }
 
     const loadingToast = toast.loading('Creating account...');
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+      
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
       toast.dismiss(loadingToast);
-      login(username);
+      login(data.username);
       toast.success('Account created successfully!');
       navigate('/dashboard');
-    }, 800);
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to create account. Username or email might already exist.');
+    }
   };
 
   return (

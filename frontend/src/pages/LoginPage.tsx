@@ -10,21 +10,35 @@ const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error('Please fill in all fields');
       return;
     }
     
-    // Simulate login API call
     const loadingToast = toast.loading('Logging in...');
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Invalid credentials');
+      }
+      
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
       toast.dismiss(loadingToast);
-      login(email.split('@')[0]);
+      login(data.username);
       toast.success('Logged in successfully!');
       navigate('/dashboard');
-    }, 800);
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to log in. Please check your credentials.');
+    }
   };
 
   return (
