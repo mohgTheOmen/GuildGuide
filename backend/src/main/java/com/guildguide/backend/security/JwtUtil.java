@@ -11,7 +11,7 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final Key key = Keys.hmacShaKeyFor("MySuperSecretKeyForGuildGuideWhichIsAtLeast32BytesLong!".getBytes());
     private final long expirationMs = 86400000;
 
     public String generateToken(String username) {
@@ -32,6 +32,8 @@ public class JwtUtil {
             getClaims(token);
             return true;
         } catch (Exception e) {
+            System.out.println("Token validation failed: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }

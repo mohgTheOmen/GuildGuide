@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import GuideCard from '../components/GuideCard';
@@ -6,13 +7,40 @@ import valorantImg from '../assets/valorant.png';
 import cyberpunkImg from '../assets/cyberpunk.png';
 import './BrowsePage.css';
 
-const MOCK_GUIDES = [
-  { id: '1', title: 'Boss Fight Strategy - Malenia', author: 'SomeGuy', time: '22 min read', views: '1,200', tags: ['Elden Ring', 'Boss Fight', 'Very Hard'], likes: "3.2k", dislikes: 24, desc: 'Quick guide on how to beat the hardest boss in the game using a proven strategy without taking damage.', image: eldenRingImg },
-  { id: '2', title: 'Beginner Tips & Tricks', author: 'ProGamer', time: '10 min read', views: '4,500', tags: ['Valorant', 'Basics'], likes: 890, dislikes: 12, desc: 'Start your journey right with these fundamental tips for climbing out of Iron and reaching Radiant.', image: valorantImg },
-  { id: '3', title: 'Complete Achievement Guide', author: 'Completionist', time: '45 min read', views: '800', tags: ['Cyberpunk 2077', '100%'], likes: 120, dislikes: 5, desc: 'A step-by-step walkthrough detailing how to unlock every single achievement and secret ending.', image: cyberpunkImg },
-];
 
 const BrowsePage = () => {
+  const [guides, setGuides] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGuides = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/guides');
+        if (response.ok) {
+          const data = await response.json();
+          const formattedGuides = data.map((g: any) => ({
+            id: g.id,
+            title: g.title,
+            author: g.authorUsername || 'Unknown',
+            time: new Date(g.createdAt).toLocaleDateString(),
+            views: g.views || 0,
+            tags: g.tags || [],
+            likes: g.likes || 0,
+            dislikes: g.dislikes || 0,
+            desc: g.content ? g.content.replace(/<[^>]+>/g, '').substring(0, 100) + '...' : 'No description',
+            image: g.imageUrl || eldenRingImg
+          }));
+          setGuides(formattedGuides);
+        }
+      } catch (error) {
+        console.error('Failed to fetch guides', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGuides();
+  }, []);
+
   return (
     <div className="browse-container">
       <div className="browse-header">
@@ -46,9 +74,15 @@ const BrowsePage = () => {
       </div>
 
       <div className="guides-grid">
-        {MOCK_GUIDES.map(guide => (
-          <GuideCard key={guide.id} guide={guide} />
-        ))}
+        {loading ? (
+          <p style={{ color: 'white' }}>Loading guides...</p>
+        ) : guides.length > 0 ? (
+          guides.map(guide => (
+            <GuideCard key={guide.id} guide={guide} />
+          ))
+        ) : (
+          <p style={{ color: 'white' }}>No guides found.</p>
+        )}
       </div>
     </div>
   );

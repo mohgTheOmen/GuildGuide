@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
 import toast from 'react-hot-toast';
@@ -8,12 +8,33 @@ const EditGuidePage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // In a real app, you would fetch the guide data based on the id
-  const [title, setTitle] = useState("Ultimate Beginner's Guide");
-  const [game, setGame] = useState('elden-ring');
+  const [title, setTitle] = useState('');
+  const [game, setGame] = useState('');
   const [difficulty, setDifficulty] = useState('beginner');
-  const [tags, setTags] = useState('pvp, farming');
-  const [content, setContent] = useState('<h1>Welcome to the guide</h1><p>This is some default content.</p>');
+  const [tags, setTags] = useState('');
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGuide = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/api/guides/${id}`);
+        if (!response.ok) throw new Error('Guide not found');
+        const data = await response.json();
+        setTitle(data.title);
+        setGame(data.game);
+        setDifficulty(data.difficulty || 'beginner');
+        setTags(data.tags ? data.tags.join(', ') : '');
+        setContent(data.content);
+      } catch {
+        toast.error('Could not load guide data.');
+        navigate('/dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGuide();
+  }, [id]);
 
   const config = useMemo(() => ({
     readonly: false,
@@ -32,60 +53,77 @@ const EditGuidePage: React.FC = () => {
     showXPathInStatusbar: false
   }), []);
 
-  const handleDelete = () => {
-    // Show a native confirm dialog for simplicity
-    if (window.confirm('Are you sure you want to delete this guide? This action cannot be undone.')) {
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this guide? This action cannot be undone.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8080/api/guides/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error();
       toast.success('Guide deleted successfully');
       navigate('/dashboard');
+    } catch {
+      toast.error('Failed to delete guide.');
     }
   };
 
-  const handleCancel = () => {
-    navigate('/dashboard');
-  };
+  const handleCancel = () => navigate('/dashboard');
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !game || !content || content === '<p><br></p>') {
       toast.error('Please fill in all required fields.');
       return;
     }
-    
+
     const loadingToast = toast.loading('Saving changes...');
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8080/api/guides/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, game, difficulty, tags, content })
+      });
+      if (!response.ok) throw new Error();
       toast.dismiss(loadingToast);
       toast.success('Changes saved successfully!');
-      navigate('/dashboard');
-    }, 800);
+      navigate(`/guide/${id}`);
+    } catch {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to save changes.');
+    }
   };
+
+  if (loading) return <div style={{ color: 'white', padding: '2rem' }}>Loading guide...</div>;
 
   return (
     <div className="edit-guide-page">
       <div className="edit-container glass-panel">
         <h1 className="section-title">Edit Guide</h1>
-        <p className="section-subtitle">Editing guide #{id}</p>
-        
+        <p className="section-subtitle">Editing: {title}</p>
+
         <form className="edit-guide-form" onSubmit={handleSave}>
           <div className="form-row">
             <div className="form-group flex-2">
               <label htmlFor="title">Guide Title</label>
-              <input 
-                type="text" 
-                id="title" 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
-              />
+              <input type="text" id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
             <div className="form-group flex-1">
               <label htmlFor="game">Select Game</label>
               <select id="game" value={game} onChange={(e) => setGame(e.target.value)}>
+                <option value="">Choose a game...</option>
                 <option value="elden-ring">Elden Ring</option>
                 <option value="wow">World of Warcraft</option>
                 <option value="destiny-2">Destiny 2</option>
               </select>
             </div>
           </div>
-          
+
           <div className="form-row">
             <div className="form-group flex-1">
               <label htmlFor="difficulty">Difficulty</label>
@@ -97,24 +135,15 @@ const EditGuidePage: React.FC = () => {
             </div>
             <div className="form-group flex-2">
               <label htmlFor="tags">Tags (comma separated)</label>
-              <input 
-                type="text" 
-                id="tags" 
-                value={tags} 
-                onChange={(e) => setTags(e.target.value)} 
-              />
+              <input type="text" id="tags" value={tags} onChange={(e) => setTags(e.target.value)} />
             </div>
           </div>
 
           <div className="form-group" style={{ marginBottom: '2rem' }}>
             <label htmlFor="content">Guide Content</label>
-            <JoditEditor
-              value={content}
-              config={config}
-              onBlur={newContent => setContent(newContent)}
-            />
+            <JoditEditor value={content} config={config} onBlur={newContent => setContent(newContent)} />
           </div>
-          
+
           <div className="form-actions-row">
             <button type="button" className="btn btn-outline btn-danger" onClick={handleDelete}>Delete Guide</button>
             <div className="right-actions">

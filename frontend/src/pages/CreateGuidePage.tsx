@@ -39,7 +39,7 @@ const CreateGuidePage: React.FC = () => {
     navigate('/dashboard');
   };
 
-  const handlePublish = (e: React.FormEvent) => {
+  const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !game || !content || content === '<p><br></p>') {
       toast.error('Please fill in all required fields (Title, Game, and Content).');
@@ -52,11 +52,34 @@ const CreateGuidePage: React.FC = () => {
     }
 
     const loadingToast = toast.loading('Publishing guide...');
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8080/api/guides', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title,
+          game,
+          difficulty,
+          tags,
+          content
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to publish guide');
+      }
+
       toast.dismiss(loadingToast);
       toast.success('Guide published successfully!');
       navigate('/dashboard');
-    }, 1000);
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to publish guide. Please try again.');
+    }
   };
 
   return (
