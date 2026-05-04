@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import GuideCard from '../components/GuideCard';
 import eldenRingImg from '../assets/elden_ring.png';
 import './ProfilePage.css';
 
@@ -15,8 +16,9 @@ const ProfilePage = () => {
             SG
           </div>
           <div className="profile-details">
-            <div className="profile-name-row">
+            <div className="profile-name-row" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <h1 className="profile-name">SomeGuy</h1>
+              <Link to="/settings" className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}>Edit Settings</Link>
             </div>
             <p className="profile-joined">Member since January 2026</p>
             <p className="profile-bio">Passionate gamer and guide creator, specializing in RPGs and souls-like games. Always happy to help new players!</p>
@@ -53,26 +55,7 @@ const ProfilePage = () => {
         
         <div className="guides-grid">
            {MOCK_SAVED.map(guide => (
-             <div key={guide.id} className="guide-card glass-panel flex-row">
-               <Link to={`/guide/${guide.id}`} className="guide-card-area flex-1">
-                 <div className="guide-card-image" style={{ width: 250 }}>
-                   <img src={guide.image} alt="Thumbnail" />
-                 </div>
-                 <div className="guide-card-content border-r">
-                   <h3 className="guide-title">{guide.title}</h3>
-                   <div className="guide-meta">
-                     <span className="author">by {guide.author}</span> <span className="dot">•</span> 
-                     <span>{guide.time}</span> <span className="dot">•</span> 
-                     <span>{guide.views} views</span>
-                   </div>
-                   <p className="guide-desc line-clamp-2">{guide.desc}</p>
-                   <div className="guide-tags mt-2">
-                      <span className="tag tag-outline">Elden Ring</span>
-                      <span className="tag">Boss Fight</span>
-                   </div>
-                 </div>
-               </Link>
-             </div>
+             <GuideCard key={guide.id} guide={guide} />
            ))}
         </div>
       </div>

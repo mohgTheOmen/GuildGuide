@@ -12,8 +12,8 @@ const HomePage = () => {
             GuildGuide helps you easily discover and create amazing game guides. Find what you need to beat your favorite game.
           </p>
           <div className="hero-actions">
-            <Link to="/profile" className="btn btn-primary hero-btn">Make an Account</Link>
-            <Link to="/browse" className="btn btn-outline hero-btn">Log In</Link>
+            <Link to="/register" className="btn btn-primary hero-btn">Make an Account</Link>
+            <Link to="/login" className="btn btn-outline hero-btn">Log In</Link>
           </div>
         </div>
         <div className="hero-image-wrapper">

@@ -66,3 +66,55 @@ input, select, textarea {
 ::-webkit-scrollbar-thumb:hover {
   background: #2d3748;
 }
+
+/* Jodit Editor Dark Mode Overrides */
+.jodit-container {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.jodit-toolbar__box {
+  background-color: var(--bg-tertiary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.jodit-toolbar-button__button {
+  color: var(--text-secondary) !important;
+}
+
+.jodit-toolbar-button__button:hover {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.jodit-wysiwyg {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  padding: 1.5rem !important;
+}
+
+.jodit-status-bar {
+  background-color: var(--bg-tertiary) !important;
+  border-top: 1px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
+}
+
+.jodit-ui-group__label {
+  color: var(--text-secondary) !important;
+}
+
+.jodit-icon {
+  fill: var(--text-secondary) !important;
+}
+
+.jodit-toolbar-button:hover .jodit-icon {
+  fill: var(--text-primary) !important;
+}
+
+/* Fix for Fullscreen Mode */
+.jodit_fullsize {
+  z-index: 1000 !important;
+}

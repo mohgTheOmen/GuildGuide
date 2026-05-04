@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Search, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Search } from 'lucide-react';
+import GuideCard from '../components/GuideCard';
 import eldenRingImg from '../assets/elden_ring.png';
 import valorantImg from '../assets/valorant.png';
 import cyberpunkImg from '../assets/cyberpunk.png';
@@ -46,39 +47,7 @@ const BrowsePage = () => {
 
       <div className="guides-grid">
         {MOCK_GUIDES.map(guide => (
-          <div key={guide.id} className="guide-card glass-panel">
-            <Link to={`/guide/${guide.id}`} className="guide-card-area">
-              <div className="guide-card-image">
-                <img src={guide.image} alt="Thumbnail" />
-              </div>
-              <div className="guide-card-content">
-                <h3 className="guide-title">{guide.title}</h3>
-                <div className="guide-meta">
-                  <span className="author">by {guide.author}</span>
-                  <span className="dot">•</span>
-                  <span>{guide.time}</span>
-                  <span className="dot">•</span>
-                  <span>{guide.views} views</span>
-                </div>
-                <p className="guide-desc">{guide.desc}</p>
-                <div className="guide-tags">
-                  {guide.tags.map(tag => (
-                    <span key={tag} className="tag tag-outline">{tag}</span>
-                  ))}
-                </div>
-              </div>
-            </Link>
-            <div className="guide-card-stats">
-              <button className="stat-btn stat-like">
-                <ThumbsUp size={20} />
-                <span>{guide.likes}</span>
-              </button>
-              <button className="stat-btn stat-dislike">
-                <ThumbsDown size={20} />
-                <span>{guide.dislikes}</span>
-              </button>
-            </div>
-          </div>
+          <GuideCard key={guide.id} guide={guide} />
         ))}
       </div>
     </div>
