@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.guildguide.backend.entity.Vote;
 import com.guildguide.backend.repository.VoteRepository;
@@ -71,19 +72,52 @@ public class GuideService {
         response.setLikes(guide.getLikes());
         response.setDislikes(guide.getDislikes());
         response.setImageUrl(guide.getImageUrl());
-        
+
         if (currentUsername != null) {
             Optional<Vote> voteOpt = voteRepository.findByUserUsernameAndGuideId(currentUsername, guide.getId());
             if (voteOpt.isPresent()) {
                 response.setUserVote(voteOpt.get().isUpvote());
             }
         }
-        
+
         return response;
     }
 
-    public List<GuideResponse> getAllGuides(String username) {
-        return guideRepository.findAll().stream()
+    public List<GuideResponse> getAllGuides(String game, String category, String search, String sort, String username) {
+        Stream<Guide> stream = guideRepository.findAll().stream();
+
+        if (game != null && !game.trim().isEmpty() && !game.equalsIgnoreCase("All Games")) {
+            stream = stream.filter(g -> g.getGame() != null && g.getGame().toLowerCase().contains(game.toLowerCase()));
+        }
+
+        if (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("All Categories")) {
+            stream = stream.filter(g -> 
+                (g.getDifficulty() != null && g.getDifficulty().equalsIgnoreCase(category)) || 
+                (g.getTags() != null && g.getTags().stream().anyMatch(t -> t.equalsIgnoreCase(category)))
+            );
+        }
+
+        if (search != null && !search.trim().isEmpty()) {
+            String lowerSearch = search.toLowerCase();
+            stream = stream.filter(g -> (g.getTitle() != null && g.getTitle().toLowerCase().contains(lowerSearch)) ||
+                    (g.getContent() != null && g.getContent().toLowerCase().contains(lowerSearch)));
+        }
+
+        List<Guide> filteredList = stream.collect(Collectors.toList());
+
+        if (sort != null && !sort.trim().isEmpty()) {
+            if (sort.equalsIgnoreCase("Most Popular")) {
+                filteredList.sort((a, b) -> Long.compare(b.getViews(), a.getViews()));
+            } else if (sort.equalsIgnoreCase("Newest")) {
+                filteredList.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+            } else if (sort.equalsIgnoreCase("Top Rated")) {
+                filteredList.sort((a, b) -> Long.compare(b.getLikes(), a.getLikes()));
+            }
+        } else {
+            filteredList.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+        }
+
+        return filteredList.stream()
                 .map(g -> mapToResponse(g, username))
                 .collect(Collectors.toList());
     }

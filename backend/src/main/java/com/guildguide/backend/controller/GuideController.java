@@ -37,8 +37,13 @@ public class GuideController {
     }
 
     @GetMapping
-    public ResponseEntity<List<GuideResponse>> getAllGuides(Authentication authentication) {
-        return ResponseEntity.ok(guideService.getAllGuides(getUsername(authentication)));
+    public ResponseEntity<List<GuideResponse>> getAllGuides(
+            @RequestParam(required = false) String game,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
+            Authentication authentication) {
+        return ResponseEntity.ok(guideService.getAllGuides(game, category, search, sort, getUsername(authentication)));
     }
 
     @GetMapping("/{id}")

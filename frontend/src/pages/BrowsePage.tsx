@@ -12,12 +12,25 @@ const BrowsePage = () => {
   const [guides, setGuides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [search, setSearch] = useState('');
+  const [game, setGame] = useState('All Games');
+  const [category, setCategory] = useState('All Categories');
+  const [sort, setSort] = useState('Newest');
+
   useEffect(() => {
     const fetchGuides = async () => {
+      setLoading(true);
       try {
         const token = localStorage.getItem('token');
         const headers = token ? { 'Authorization': `Bearer ${token}` } : undefined;
-        const response = await fetch('http://localhost:8080/api/guides', { headers });
+
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (game && game !== 'All Games') params.append('game', game);
+        if (category && category !== 'All Categories') params.append('category', category);
+        if (sort) params.append('sort', sort);
+
+        const response = await fetch(`http://localhost:8080/api/guides?${params.toString()}`, { headers });
         if (response.ok) {
           const data = await response.json();
           const formattedGuides = data.map((g: any) => ({
@@ -41,8 +54,13 @@ const BrowsePage = () => {
         setLoading(false);
       }
     };
-    fetchGuides();
-  }, []);
+
+    const delayDebounceFn = setTimeout(() => {
+      fetchGuides();
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search, game, category, sort]);
 
   return (
     <div className="browse-container">
@@ -54,24 +72,43 @@ const BrowsePage = () => {
       <div className="filters-glass-container">
         <div className="search-box">
           <Search size={20} className="search-icon" />
-          <input type="text" placeholder="Search..." className="search-input" />
+          <input
+            type="text"
+            placeholder="Search guides, content..."
+            className="search-input"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
         <div className="dropdowns">
           <div className="filter-group">
             <label>Game</label>
-            <select><option>All Games</option></select>
+            <select value={game} onChange={(e) => setGame(e.target.value)}>
+              <option value="All Games">All Games</option>
+              <option value="elden-ring">Elden Ring</option>
+              <option value="wow">World of Warcraft</option>
+              <option value="destiny-2">Destiny 2</option>
+              <option value="Valorant">Valorant</option>
+              <option value="Cyberpunk 2077">Cyberpunk 2077</option>
+              <option value="Minecraft">Minecraft</option>
+            </select>
           </div>
           <div className="filter-group">
             <label>Category</label>
-            <select><option>All Categories</option></select>
-          </div>
-          <div className="filter-group">
-            <label>Platform</label>
-            <select><option>All Platforms</option></select>
+            <select value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="All Categories">All Categories</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
           </div>
           <div className="filter-group">
             <label>Sort By</label>
-            <select><option>Most Popular</option></select>
+            <select value={sort} onChange={(e) => setSort(e.target.value)}>
+              <option>Newest</option>
+              <option>Most Popular</option>
+              <option>Top Rated</option>
+            </select>
           </div>
         </div>
       </div>
