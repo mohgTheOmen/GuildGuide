@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
 import toast from 'react-hot-toast';
+import { Sparkles, Link as LinkIcon } from 'lucide-react';
+import { marked } from 'marked';
 import './CreateGuidePage.css';
 
 const CreateGuidePage: React.FC = () => {
@@ -10,6 +12,8 @@ const CreateGuidePage: React.FC = () => {
   const [difficulty, setDifficulty] = useState('beginner');
   const [tags, setTags] = useState('');
   const [content, setContent] = useState('');
+  const [importUrl, setImportUrl] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
   
   const navigate = useNavigate();
 
@@ -29,6 +33,51 @@ const CreateGuidePage: React.FC = () => {
     ],
     showXPathInStatusbar: false
   }), []);
+
+  const handleAIImport = async () => {
+    if (!importUrl) {
+      toast.error('Please enter a URL to import from.');
+      return;
+    }
+
+    setIsImporting(true);
+    const loadingToast = toast.loading('AI is analyzing the external guide...');
+    try {
+      const response = await fetch('http://localhost:8000/scrape-guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: importUrl })
+      });
+
+      if (!response.ok) throw new Error('AI Import failed');
+
+      const data = await response.json();
+      
+      setTitle(data.title || '');
+      setDifficulty(data.difficulty?.toLowerCase() || 'beginner');
+      setTags(data.tags?.join(', ') || '');
+      
+      // Basic game matching or default
+      if (data.game) {
+        const gameSlug = data.game.toLowerCase().includes('elden') ? 'elden-ring' : 
+                         data.game.toLowerCase().includes('warcraft') ? 'wow' :
+                         data.game.toLowerCase().includes('destiny') ? 'destiny-2' : '';
+        setGame(gameSlug);
+      }
+
+      const htmlContent = await marked.parse(data.content || '');
+      setContent(htmlContent);
+
+      toast.dismiss(loadingToast);
+      toast.success('AI successfully imported and formatted the guide!');
+      setImportUrl('');
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to import guide. Please check the URL.');
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   const handleSaveDraft = () => {
     if (!title) {
@@ -88,6 +137,35 @@ const CreateGuidePage: React.FC = () => {
         <h1 className="section-title">Create New Guide</h1>
         <p className="section-subtitle">Share your knowledge with the community</p>
         
+        {/* AI Import Section */}
+        <div className="ai-import-section">
+          <div className="ai-import-header">
+            <Sparkles size={20} className="ai-icon" />
+            <h3>Import with AI Intelligence</h3>
+          </div>
+          <p className="ai-import-desc">Paste a link to an external guide or article, and our AI will scrape, summarize, and format it for you instantly.</p>
+          <div className="ai-import-input-wrapper">
+            <div className="import-input-container">
+              <LinkIcon size={18} className="import-link-icon" />
+              <input 
+                type="url" 
+                placeholder="https://example-gaming-site.com/strategy-guide" 
+                value={importUrl}
+                onChange={(e) => setImportUrl(e.target.value)}
+                disabled={isImporting}
+              />
+            </div>
+            <button 
+              type="button" 
+              className="btn btn-ai-import" 
+              onClick={handleAIImport}
+              disabled={isImporting}
+            >
+              {isImporting ? 'Converting...' : 'Import & Format'}
+            </button>
+          </div>
+        </div>
+
         <form className="create-guide-form" onSubmit={handlePublish}>
           <div className="form-row">
             <div className="form-group flex-2">

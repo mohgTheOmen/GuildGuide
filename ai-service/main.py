@@ -37,6 +37,10 @@ class AskRequest(BaseModel):
     question: str
 
 
+class ScrapeRequest(BaseModel):
+    url: str
+
+
 # ─── Data Sources ─────────────────────────────────────────────────────────────
 
 async def fetch_db_guides(query: str) -> str:
@@ -155,6 +159,70 @@ Expert. Concise. No filler. Write like a top-ranked player explaining to a smart
 
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
+
+@app.post("/scrape-guide")
+async def scrape_guide(request: ScrapeRequest):
+    import trafilatura
+    
+    url = request.url.strip()
+    if not url:
+        raise HTTPException(status_code=400, detail="URL cannot be empty.")
+
+    log.info(f"Scraping URL: {url}")
+    
+    try:
+        downloaded = trafilatura.fetch_url(url)
+        content = trafilatura.extract(downloaded)
+        if not content:
+            raise HTTPException(status_code=400, detail="Failed to extract content from the provided URL.")
+    except Exception as e:
+        log.error(f"Scrape error: {e}")
+        raise HTTPException(status_code=500, detail=f"Scraping failed: {str(e)}")
+
+    prompt = f"""You are a professional gaming guide editor. 
+Below is raw text extracted from a gaming website. 
+Your task is to convert this into a high-quality, structured gaming guide in JSON format.
+
+RAW CONTENT:
+---
+{content[:8000]}
+---
+
+STRICT JSON OUTPUT FORMAT:
+{{
+  "title": "Clear, catchy title",
+  "game": "Exact game name",
+  "difficulty": "Easy, Medium, or Hard",
+  "content": "Full detailed guide in professional GitHub-Flavored Markdown. Include headers, lists, and bold text.",
+  "tags": ["Tag1", "Tag2", "Tag3"]
+}}
+
+RULES:
+- Return ONLY the JSON object. 
+- No intro text, no conversational filler.
+- Ensure the Markdown content is comprehensive and covers all strategies found in the text.
+- If the text is missing information, use your internal gaming knowledge to fill the gaps to make it a complete guide."""
+
+    # Call Groq with a lower temperature for consistent JSON
+    try:
+        client = AsyncGroq(api_key=GROQ_API_KEY)
+        response = await client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": "You are a specialized guide-to-JSON converter. Output valid JSON only."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.1,
+            max_tokens=3000,
+            response_format={ "type": "json_object" }
+        )
+        result_str = response.choices[0].message.content
+        import json
+        return json.loads(result_str)
+    except Exception as e:
+        log.error(f"AI Conversion error: {e}")
+        raise HTTPException(status_code=500, detail=f"AI conversion failed: {str(e)}")
+
 
 @app.post("/ask")
 async def ask(request: AskRequest):

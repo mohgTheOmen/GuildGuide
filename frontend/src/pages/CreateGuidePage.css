@@ -56,3 +56,114 @@
   padding-top: 1.5rem;
   border-top: 1px solid var(--border-color);
 }
+
+/* AI Import Section */
+.ai-import-section {
+  background: rgba(0, 230, 230, 0.03);
+  border: 1px solid rgba(0, 230, 230, 0.2);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 1.5rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-import-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent-cyan);
+}
+
+.ai-import-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.ai-icon {
+  color: var(--accent-cyan);
+  filter: drop-shadow(0 0 5px var(--accent-cyan));
+}
+
+.ai-import-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ai-import-desc {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.ai-import-input-wrapper {
+  display: flex;
+  gap: 1rem;
+}
+
+.import-input-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.import-link-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-secondary);
+}
+
+.import-input-container input {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.8rem !important;
+  background: rgba(15, 18, 29, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  color: white !important;
+}
+
+.import-input-container input:focus {
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 15px rgba(0, 230, 230, 0.1) !important;
+}
+
+.btn-ai-import {
+  background: var(--accent-cyan);
+  color: #0f121d;
+  font-weight: 700;
+  padding: 0 1.5rem;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-ai-import:hover:not(:disabled) {
+  opacity: 0.9;
+  box-shadow: 0 0 20px rgba(0, 230, 230, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-ai-import:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .ai-import-input-wrapper {
+    flex-direction: column;
+  }
+  .btn-ai-import {
+    width: 100%;
+    padding: 0.8rem;
+  }
+}
+
