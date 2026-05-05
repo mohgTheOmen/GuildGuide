@@ -3,6 +3,66 @@ import { Zap, Search, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './InstantActionPage.css';
 
+/** Lightweight Markdown → React renderer (no deps needed) */
+const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
+  const lines = content.split('\n');
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+
+  const parseInline = (text: string): React.ReactNode => {
+    const parts: React.ReactNode[] = [];
+    const regex = /(\*\*([^*]+)\*\*)|(\*([^*]+)\*)|(`([^`]+)`)/g;
+    let last = 0, m;
+    while ((m = regex.exec(text)) !== null) {
+      if (m.index > last) parts.push(text.slice(last, m.index));
+      if (m[1]) parts.push(<strong key={m.index}>{m[2]}</strong>);
+      else if (m[3]) parts.push(<em key={m.index}>{m[4]}</em>);
+      else if (m[5]) parts.push(<code key={m.index} className="md-code">{m[6]}</code>);
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) parts.push(text.slice(last));
+    return parts;
+  };
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (line.startsWith('### ')) {
+      elements.push(<h3 key={i} className="md-h3">{parseInline(line.slice(4))}</h3>);
+    } else if (line.startsWith('## ')) {
+      elements.push(<h2 key={i} className="md-h2">{parseInline(line.slice(3))}</h2>);
+    } else if (line.startsWith('# ')) {
+      elements.push(<h1 key={i} className="md-h1">{parseInline(line.slice(2))}</h1>);
+    } else if (line.match(/^[-*] /)) {
+      // Collect consecutive bullet items
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && lines[i].match(/^[-*] /)) {
+        items.push(<li key={i}>{parseInline(lines[i].slice(2))}</li>);
+        i++;
+      }
+      elements.push(<ul key={`ul-${i}`} className="md-ul">{items}</ul>);
+      continue;
+    } else if (line.match(/^\d+\. /)) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && lines[i].match(/^\d+\. /)) {
+        items.push(<li key={i}>{parseInline(lines[i].replace(/^\d+\. /, ''))}</li>);
+        i++;
+      }
+      elements.push(<ol key={`ol-${i}`} className="md-ol">{items}</ol>);
+      continue;
+    } else if (line.startsWith('---') || line.startsWith('===')) {
+      elements.push(<hr key={i} className="md-hr" />);
+    } else if (line.trim() === '') {
+      // skip blank
+    } else {
+      elements.push(<p key={i} className="md-p">{parseInline(line)}</p>);
+    }
+    i++;
+  }
+
+  return <div className="markdown-body">{elements}</div>;
+};
+
 const SUGGESTIONS = [
   'Optimal build path for Germany 1936',
   'How to beat Malenia with a strength build',
@@ -112,8 +172,8 @@ const InstantActionPage: React.FC = () => {
               <Zap size={16} />
               <span>Answer</span>
             </div>
-            <div className="answer-body" style={{ whiteSpace: 'pre-wrap' }}>
-              {answer}
+            <div className="answer-body">
+              <MarkdownRenderer content={answer} />
             </div>
             <button
               className="ask-another-btn"
