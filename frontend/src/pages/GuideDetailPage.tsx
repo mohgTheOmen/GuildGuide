@@ -20,6 +20,14 @@ interface Guide {
   imageUrl: string;
 }
 
+interface Comment {
+  id: number;
+  content: string;
+  authorUsername: string;
+  guideId: number;
+  createdAt: string;
+}
+
 const GuideDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { username } = useAuth();
@@ -27,26 +35,66 @@ const GuideDetailPage = () => {
   const [guide, setGuide] = useState<Guide | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
 
   useEffect(() => {
-    const fetchGuide = async () => {
+    const fetchGuideAndComments = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/guides/${id}`);
-        if (!response.ok) throw new Error('Guide not found');
-        const data = await response.json();
-        setGuide(data);
+        const [guideRes, commentsRes] = await Promise.all([
+          fetch(`http://localhost:8080/api/guides/${id}`),
+          fetch(`http://localhost:8080/api/guides/${id}/comments`)
+        ]);
+        
+        if (!guideRes.ok) throw new Error('Guide not found');
+        
+        const guideData = await guideRes.json();
+        setGuide(guideData);
+        
+        if (commentsRes.ok) {
+          const commentsData = await commentsRes.json();
+          setComments(commentsData);
+        }
       } catch (err) {
         setError('Could not load guide.');
       } finally {
         setLoading(false);
       }
     };
-    fetchGuide();
+    fetchGuideAndComments();
   }, [id]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success('Link copied to clipboard!');
+  };
+
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8080/api/guides/${id}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ content: newComment })
+      });
+
+      if (response.ok) {
+        const comment = await response.json();
+        setComments([comment, ...comments]);
+        setNewComment('');
+        toast.success('Comment posted!');
+      } else {
+        toast.error('Failed to post comment. Please log in.');
+      }
+    } catch (err) {
+      toast.error('An error occurred.');
+    }
   };
 
   if (loading) return <div className="guide-detail-container" style={{ color: 'white', padding: '2rem' }}>Loading...</div>;
@@ -103,10 +151,36 @@ const GuideDetailPage = () => {
           <div className="content-body" dangerouslySetInnerHTML={{ __html: guide.content }} />
 
           <div className="comments-section">
-            <button className="btn btn-ghost comments-btn">
-              <MessageSquare size={18} />
-              Comments
-            </button>
+            <h3>Comments ({comments.length})</h3>
+            
+            {username ? (
+              <form onSubmit={handleCommentSubmit} className="comment-form">
+                <textarea 
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="comment-input"
+                  rows={3}
+                />
+                <button type="submit" className="btn btn-primary" disabled={!newComment.trim()}>
+                  Post Comment
+                </button>
+              </form>
+            ) : (
+              <p className="login-prompt">Please <a href="/login">log in</a> to post a comment.</p>
+            )}
+
+            <div className="comments-list">
+              {comments.map(comment => (
+                <div key={comment.id} className="comment-item">
+                  <div className="comment-header">
+                    <span className="comment-author">{comment.authorUsername}</span>
+                    <span className="comment-date">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <p className="comment-content">{comment.content}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
