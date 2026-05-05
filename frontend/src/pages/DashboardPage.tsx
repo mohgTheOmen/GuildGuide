@@ -1,120 +1,162 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Edit2, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { ArrowRight, Plus, BookOpen, Trash2, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './DashboardPage.css';
+
+// Progress is stored as { [guideId]: 0-100 } in localStorage
+const getGuideProgress = (id: number): number => {
+  try {
+    const map = JSON.parse(localStorage.getItem('guideProgress') || '{}');
+    return map[id] ?? 0;
+  } catch { return 0; }
+};
 
 interface Guide {
   id: number;
   title: string;
   game: string;
+  difficulty: string;
+  tags: string[];
+  content: string;
+  authorUsername: string;
   createdAt: string;
   views: number;
   likes: number;
 }
 
-const DashboardPage: React.FC = () => {
+const DashboardPage = () => {
+  const { username } = useAuth();
+  const navigate = useNavigate();
   const [guides, setGuides] = useState<Guide[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMyGuides = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8080/api/guides/my', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setGuides(data);
-      }
-    } catch (error) {
-      toast.error('Failed to load your guides.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchMyGuides = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:8080/api/guides/my', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setGuides(data);
+        }
+      } catch {
+        console.error('Failed to fetch guides');
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchMyGuides();
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this guide? This cannot be undone.')) return;
+    if (!confirm('Delete this guide?')) return;
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8080/api/guides/${id}`, {
+      const res = await fetch(`http://localhost:8080/api/guides/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error();
-      toast.success('Guide deleted.');
-      setGuides(prev => prev.filter(g => g.id !== id));
+      if (res.ok) {
+        setGuides(g => g.filter(g => g.id !== id));
+        toast.success('Guide deleted.');
+      }
     } catch {
       toast.error('Failed to delete guide.');
     }
   };
 
+  const difficultyColor = (d: string) => {
+    if (d === 'beginner') return '#10b981';
+    if (d === 'intermediate') return '#f59e0b';
+    return '#ef4444';
+  };
+
   return (
     <div className="dashboard-page">
+      {/* Header */}
       <div className="dashboard-header">
         <div>
-          <h1 className="section-title">Dashboard</h1>
-          <p className="section-subtitle">Manage your guides and activity</p>
+          <h1 className="dashboard-welcome">Welcome back{username ? `, ${username}` : ''}</h1>
+          <p className="dashboard-sub">Ready to continue your training?</p>
         </div>
-        <Link to="/create-guide" className="btn btn-primary">Create New Guide</Link>
+        <button className="btn btn-primary dashboard-create-btn" onClick={() => navigate('/create-guide')}>
+          <Plus size={16} /> New Guide
+        </button>
       </div>
 
-      <div className="dashboard-content">
-        <div className="dashboard-tabs">
-          <button className="tab-btn active">My Published Guides</button>
+      {/* My Guides Section */}
+      <div className="dashboard-section">
+        <div className="section-label">
+          <BookOpen size={16} />
+          <span>My Guides</span>
+          <span className="guide-count">{guides.length}</span>
         </div>
 
-        <div className="dashboard-panel glass-panel">
-          {loading ? (
-            <p style={{ color: 'var(--text-secondary)' }}>Loading your guides...</p>
-          ) : guides.length === 0 ? (
-            <div className="empty-state">
-              <p>You haven't published any guides yet.</p>
-              <Link to="/create-guide" className="btn btn-outline">Start Writing</Link>
-            </div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left', color: 'var(--text-secondary)' }}>
-                  <th style={{ padding: '0.75rem 1rem' }}>Title</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Game</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Date</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Views</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Likes</th>
-                  <th style={{ padding: '0.75rem 1rem' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {guides.map(guide => (
-                  <tr key={guide.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <Link to={`/guide/${guide.id}`} style={{ color: 'var(--accent-cyan)' }}>{guide.title}</Link>
-                    </td>
-                    <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{guide.game}</td>
-                    <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{new Date(guide.createdAt).toLocaleDateString()}</td>
-                    <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{guide.views}</td>
-                    <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)' }}>{guide.likes}</td>
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <Link to={`/edit-guide/${guide.id}`} className="btn btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}>
-                          <Edit2 size={14} /> Edit
-                        </Link>
-                        <button onClick={() => handleDelete(guide.id)} className="btn btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', color: '#f87171', borderColor: '#f87171' }}>
-                          <Trash2 size={14} /> Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {loading ? (
+          <div className="dashboard-skeleton">
+            {[1, 2, 3].map(i => <div key={i} className="skeleton-card" />)}
+          </div>
+        ) : guides.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon"><BookOpen size={36} /></div>
+            <h3>No guides yet</h3>
+            <p>Create your first guide and share your knowledge</p>
+            <button className="btn btn-primary" onClick={() => navigate('/create-guide')}>
+              <Plus size={16} /> Create Guide
+            </button>
+          </div>
+        ) : (
+          <div className="my-guides-list">
+            {guides.map((guide, idx) => (
+              <div key={guide.id} className="my-guide-card">
+                <div className="guide-card-left">
+                  <div className="guide-card-header">
+                    <span className="game-name">{guide.game}</span>
+                    <span className="active-badge">Active</span>
+                  </div>
+                  <h3 className="my-guide-title">{guide.title}</h3>
+                  <div className="my-guide-meta">
+                    <span className="difficulty-badge" style={{ color: difficultyColor(guide.difficulty) }}>
+                      {guide.difficulty}
+                    </span>
+                    <span className="meta-sep">•</span>
+                    <span className="meta-date">
+                      {new Date(guide.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                    <span className="meta-sep">•</span>
+                    <span className="meta-views">{guide.views} views</span>
+                  </div>
+                  <div className="progress-section">
+                    <div className="progress-header">
+                      <span>Training Progress</span>
+                      <span className="progress-pct">{getGuideProgress(guide.id)}%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <div className="progress-fill" style={{ width: `${getGuideProgress(guide.id)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                <div className="guide-card-right">
+                  <button className="continue-btn" onClick={() => navigate(`/guide/${guide.id}`)}>
+                    Continue Guide <ArrowRight size={16} />
+                  </button>
+                  <div className="guide-card-actions">
+                    <button className="icon-action edit" onClick={() => navigate(`/edit-guide/${guide.id}`)}>
+                      <Edit2 size={14} /> Edit
+                    </button>
+                    <button className="icon-action delete" onClick={() => handleDelete(guide.id)}>
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

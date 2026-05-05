@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Share2, ThumbsUp, ThumbsDown, Edit2 } from 'lucide-react';
+import { Share2, ThumbsUp, ThumbsDown, Edit2, ChevronLeft, Monitor, Star, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import './GuideDetailPage.css';
@@ -17,7 +17,6 @@ interface Guide {
   views: number;
   likes: number;
   dislikes: number;
-  imageUrl: string;
   userVote?: boolean | null;
 }
 
@@ -29,6 +28,46 @@ interface Comment {
   createdAt: string;
 }
 
+// Store progress in localStorage
+const saveProgress = (id: number, pct: number) => {
+  try {
+    const map = JSON.parse(localStorage.getItem('guideProgress') || '{}');
+    map[id] = Math.max(map[id] ?? 0, pct);
+    localStorage.setItem('guideProgress', JSON.stringify(map));
+  } catch {}
+};
+
+const markComplete = (id: number) => {
+  try {
+    const map = JSON.parse(localStorage.getItem('guideProgress') || '{}');
+    map[id] = 100;
+    localStorage.setItem('guideProgress', JSON.stringify(map));
+  } catch {}
+};
+
+// Parse HTML content into named sections
+const parseSections = (html: string): Array<{ title: string; body: string }> => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const headings = doc.querySelectorAll('h1, h2, h3');
+
+  if (headings.length === 0) {
+    return [{ title: 'Guide Content', body: html }];
+  }
+
+  const sections: Array<{ title: string; body: string }> = [];
+  headings.forEach((h, i) => {
+    let body = '';
+    let next = h.nextElementSibling;
+    while (next && !['H1', 'H2', 'H3'].includes(next.tagName)) {
+      body += next.outerHTML;
+      next = next.nextElementSibling;
+    }
+    sections.push({ title: h.textContent || `Section ${i + 1}`, body });
+  });
+  return sections;
+};
+
 const GuideDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { username } = useAuth();
@@ -38,6 +77,7 @@ const GuideDetailPage = () => {
   const [error, setError] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     const fetchGuideAndComments = async () => {
@@ -48,17 +88,21 @@ const GuideDetailPage = () => {
           fetch(`http://localhost:8080/api/guides/${id}`, { headers }),
           fetch(`http://localhost:8080/api/guides/${id}/comments`)
         ]);
-
         if (!guideRes.ok) throw new Error('Guide not found');
-
         const guideData = await guideRes.json();
         setGuide(guideData);
 
-        if (commentsRes.ok) {
-          const commentsData = await commentsRes.json();
-          setComments(commentsData);
-        }
-      } catch (err) {
+        // Save to localStorage for sidebar/community link + set progress
+        localStorage.setItem('lastGuideId', String(guideData.id));
+        localStorage.setItem('lastGuideTitle', guideData.title);
+        saveProgress(guideData.id, 10);
+
+        // Check if already completed
+        const map = JSON.parse(localStorage.getItem('guideProgress') || '{}');
+        if (map[guideData.id] === 100) setCompleted(true);
+
+        if (commentsRes.ok) setComments(await commentsRes.json());
+      } catch {
         setError('Could not load guide.');
       } finally {
         setLoading(false);
@@ -72,148 +116,158 @@ const GuideDetailPage = () => {
     toast.success('Link copied to clipboard!');
   };
 
+  const handleMarkComplete = () => {
+    if (!guide) return;
+    markComplete(guide.id);
+    setCompleted(true);
+    toast.success('Guide marked as complete! 🎉');
+  };
+
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8080/api/guides/${id}/comments`, {
+      const res = await fetch(`http://localhost:8080/api/guides/${id}/comments`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ content: newComment })
       });
-
-      if (response.ok) {
-        const comment = await response.json();
+      if (res.ok) {
+        const comment = await res.json();
         setComments([comment, ...comments]);
         setNewComment('');
         toast.success('Comment posted!');
-      } else {
-        toast.error('Failed to post comment. Please log in.');
-      }
-    } catch (err) {
-      toast.error('An error occurred.');
-    }
+      } else toast.error('Failed to post comment. Please log in.');
+    } catch { toast.error('An error occurred.'); }
   };
 
   const handleVote = async (isUpvote: boolean) => {
-    if (!username) {
-      toast.error('Please log in to vote.');
-      return;
-    }
-
+    if (!username) { toast.error('Please log in to vote.'); return; }
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8080/api/guides/${id}/vote`, {
+      const res = await fetch(`http://localhost:8080/api/guides/${id}/vote`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ isUpvote })
       });
-
-      if (response.ok) {
-        const updatedGuide = await response.json();
-        setGuide(updatedGuide);
-      } else {
-        toast.error('Failed to vote.');
-      }
-    } catch (err) {
-      toast.error('An error occurred while voting.');
-    }
+      if (res.ok) setGuide(await res.json());
+      else toast.error('Failed to vote.');
+    } catch { toast.error('An error occurred while voting.'); }
   };
 
-  if (loading) return <div className="guide-detail-container" style={{ color: 'white', padding: '2rem' }}>Loading...</div>;
-  if (error || !guide) return <div className="guide-detail-container" style={{ color: 'white', padding: '2rem' }}>{error}</div>;
+  if (loading) return <div className="active-guide-page"><div className="active-guide-loading">Loading guide...</div></div>;
+  if (error || !guide) return <div className="active-guide-page"><div className="active-guide-loading">{error}</div></div>;
 
   const isAuthor = username === guide.authorUsername;
+  const sections = parseSections(guide.content);
 
   return (
-    <div className="guide-detail-container">
-      <div className="guide-hero glass-panel">
-        <div className="guide-hero-tags">
-          <span className="tag tag-outline">{guide.game}</span>
-          {guide.difficulty && <span className="tag tag-outline">{guide.difficulty}</span>}
+    <div className="active-guide-page">
+      {/* Back Button */}
+      <button className="back-btn" onClick={() => navigate('/browse')}>
+        <ChevronLeft size={16} /> Back to Directory
+      </button>
+
+      {/* Guide Header */}
+      <div className="active-guide-header">
+        <div className="active-guide-tags">
+          <span className="ag-tag">{guide.game}</span>
+          {guide.difficulty && <span className="ag-tag ag-tag-difficulty">{guide.difficulty}</span>}
         </div>
-        <h1 className="guide-hero-title">{guide.title}</h1>
-        <div className="guide-hero-meta">
-          <span className="author">{guide.authorUsername}</span> <span className="dot">•</span>
-          <span>{guide.views} views</span> <span className="dot">•</span>
-          <span>{new Date(guide.createdAt).toLocaleDateString()}</span>
+        <h1 className="active-guide-title">{guide.title}</h1>
+        <div className="active-guide-meta">
+          <span className="ag-author">by {guide.authorUsername}</span>
+          <span className="ag-sep">·</span>
+          <span>v{guide.id}.{guide.views}.0</span>
+          <span className="ag-sep">·</span>
+          <span>Modified {new Date(guide.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+          <span className="ag-sep">·</span>
+          <span>{guide.views} views</span>
         </div>
-        <div className="guide-hero-actions">
-          {isAuthor && (
-            <button className="btn btn-primary" onClick={() => navigate(`/edit-guide/${guide.id}`)}>
-              <Edit2 size={16} /> Edit Guide
+        <div className="active-guide-actions">
+          <button className="ag-vote-btn" onClick={() => handleVote(true)}>
+            <ThumbsUp size={15} className={guide.userVote === true ? 'voted-up' : ''} />
+            <span>{guide.likes}</span>
+          </button>
+          <button className="ag-vote-btn" onClick={() => handleVote(false)}>
+            <ThumbsDown size={15} className={guide.userVote === false ? 'voted-down' : ''} />
+            <span>{guide.dislikes}</span>
+          </button>
+          <button className="ag-action-btn" onClick={handleShare}><Share2 size={15} /> Share</button>
+          {!completed && (
+            <button className="ag-action-btn ag-complete-btn" onClick={handleMarkComplete}>
+              Mark Complete
             </button>
           )}
-          <button className="btn btn-outline" onClick={handleShare}>
-            <Share2 size={16} /> Share
-          </button>
+          {completed && <span className="ag-completed-badge">✓ Completed</span>}
         </div>
       </div>
 
-      <div className="guide-layout">
-        <aside className="guide-sidebar glass-panel">
-          <h3 className="sidebar-title">Tags</h3>
-          <ul className="chapter-list">
-            {guide.tags && guide.tags.length > 0
-              ? guide.tags.map((tag, i) => <li key={i}>{tag}</li>)
-              : <li>No tags</li>}
-          </ul>
-        </aside>
-
-        <div className="guide-content glass-panel">
-          <div className="content-header">
-            <h2>{guide.title}</h2>
-            <div className="content-actions">
-              <span className="vote-count">{guide.likes}</span>
-              <button className={`icon-btn stat-like ${guide.userVote === true ? 'active' : ''}`} onClick={() => handleVote(true)}><ThumbsUp size={18} /></button>
-              <span className="vote-count">{guide.dislikes}</span>
-              <button className={`icon-btn stat-dislike ${guide.userVote === false ? 'active' : ''}`} onClick={() => handleVote(false)}><ThumbsDown size={18} /></button>
-            </div>
+      {/* Sections */}
+      <div className="active-guide-sections">
+        {sections.map((sec, i) => (
+          <div key={i} className="guide-section-card">
+            <div className="section-number">SEC {i + 1}</div>
+            <h2 className="section-title">{sec.title}</h2>
+            <div className="section-body" dangerouslySetInnerHTML={{ __html: sec.body || guide.content }} />
           </div>
+        ))}
+      </div>
 
-          <div className="content-body" dangerouslySetInnerHTML={{ __html: guide.content }} />
+      {/* Comments */}
+      <div className="active-guide-comments">
+        <h3 className="comments-title">Comments <span className="comments-count">{comments.length}</span></h3>
 
-          <div className="comments-section">
-            <h3>Comments ({comments.length})</h3>
+        {username ? (
+          <form className="comment-form" onSubmit={handleCommentSubmit}>
+            <textarea
+              className="comment-input"
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              placeholder="Share your thoughts on this guide..."
+              rows={3}
+            />
+            <button type="submit" className="btn btn-primary comment-submit" disabled={!newComment.trim()}>
+              Post Comment
+            </button>
+          </form>
+        ) : (
+          <p className="login-prompt">Please <a href="/login">log in</a> to post a comment.</p>
+        )}
 
-            {username ? (
-              <form onSubmit={handleCommentSubmit} className="comment-form">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="comment-input"
-                  rows={3}
-                />
-                <button type="submit" className="btn btn-primary" disabled={!newComment.trim()}>
-                  Post Comment
-                </button>
-              </form>
-            ) : (
-              <p className="login-prompt">Please <a href="/login">log in</a> to post a comment.</p>
-            )}
-
-            <div className="comments-list">
-              {comments.map(comment => (
-                <div key={comment.id} className="comment-item">
-                  <div className="comment-header">
-                    <span className="comment-author">{comment.authorUsername}</span>
-                    <span className="comment-date">{new Date(comment.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <p className="comment-content">{comment.content}</p>
+        <div className="comments-list">
+          {comments.map(c => (
+            <div key={c.id} className="comment-item">
+              <div className="comment-header">
+                <div className="comment-avatar">{c.authorUsername.charAt(0).toUpperCase()}</div>
+                <div>
+                  <span className="comment-author">{c.authorUsername}</span>
+                  <span className="comment-date">{new Date(c.createdAt).toLocaleDateString()}</span>
                 </div>
-              ))}
+              </div>
+              <p className="comment-body">{c.content}</p>
             </div>
-          </div>
+          ))}
         </div>
+      </div>
+
+      {/* Floating Toolbar */}
+      <div className="floating-toolbar">
+        <button className="float-btn" title="Overview" onClick={() => navigate('/browse')}>
+          <Monitor size={18} />
+        </button>
+        {isAuthor && (
+          <button className="float-btn" title="Edit Guide" onClick={() => navigate(`/edit-guide/${guide.id}`)}>
+            <Edit2 size={18} />
+          </button>
+        )}
+        <button className="float-btn" title="Community Feedback" onClick={() => navigate(`/community/${guide.id}`)}>
+          <MessageSquare size={18} />
+        </button>
+        <button className="float-btn" title="Share" onClick={handleShare}>
+          <Star size={18} />
+        </button>
       </div>
     </div>
   );

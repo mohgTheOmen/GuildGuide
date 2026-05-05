@@ -1,19 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-primary: #0f121d;
-  --bg-secondary: #171b29;
-  --bg-tertiary: #1f2538;
-  
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  
-  --accent-cyan: #00e6e6;
-  --accent-cyan-hover: #00cccc;
-  --accent-cyan-transparent: rgba(0, 230, 230, 0.1);
-  --accent-cyan-glow: rgba(0, 230, 230, 0.3);
+  --bg-primary: #0a0d1a;
+  --bg-secondary: #0f1629;
+  --bg-tertiary: #1a2140;
 
-  --border-color: rgba(255, 255, 255, 0.08);
+  --text-primary: #f8fafc;
+  --text-secondary: #8892a4;
+
+  --accent-purple: #7c3aed;
+  --accent-indigo: #4f46e5;
+  --accent-purple-light: #a78bfa;
+  --accent-purple-transparent: rgba(124, 58, 237, 0.15);
+  --accent-purple-glow: rgba(124, 58, 237, 0.35);
+
+  /* Keep cyan alias so existing components don't break */
+  --accent-cyan: #a78bfa;
+  --accent-cyan-hover: #9061f9;
+  --accent-cyan-transparent: rgba(124, 58, 237, 0.15);
+  --accent-cyan-glow: rgba(124, 58, 237, 0.35);
+
+  --border-color: rgba(255, 255, 255, 0.07);
+  --card-bg: rgba(15, 22, 41, 0.8);
 
   --nav-height: 72px;
 }
