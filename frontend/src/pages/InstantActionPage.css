@@ -3,10 +3,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  background: radial-gradient(ellipse at 60% 40%, rgba(124, 58, 237, 0.08) 0%, transparent 60%),
-              radial-gradient(ellipse at 30% 70%, rgba(79, 70, 229, 0.06) 0%, transparent 50%),
+  padding: 3rem 2rem;
+  background: radial-gradient(ellipse at 60% 40%, rgba(0, 230, 230, 0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 30% 70%, rgba(0, 153, 204, 0.06) 0%, transparent 50%),
               var(--bg-primary);
+  width: 100%;
 }
 
 .instant-action-container {
@@ -34,13 +35,13 @@
 .instant-action-icon {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  background: linear-gradient(135deg, #00e6e6, #0099cc);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  box-shadow: 0 0 40px rgba(124, 58, 237, 0.35);
+  color: #0f121d;
+  box-shadow: 0 0 40px rgba(0, 230, 230, 0.35);
 }
 
 .instant-action-title {
@@ -61,34 +62,29 @@
 
 .instant-action-input-wrapper {
   width: 100%;
+  position: relative;
   display: flex;
   align-items: center;
-  background: rgba(15, 20, 40, 0.8);
-  border: 1px solid rgba(124, 58, 237, 0.3);
-  border-radius: 16px;
-  padding: 0.85rem 1rem;
-  gap: 0.75rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.instant-action-input-wrapper:focus-within {
-  border-color: rgba(124, 58, 237, 0.7);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+.instant-action-input-wrapper:focus-within .input-search-icon {
+  color: var(--accent-cyan);
 }
 
 .input-search-icon {
-  color: rgba(255, 255, 255, 0.3);
-  flex-shrink: 0;
+  position: absolute;
+  left: 1.2rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+  transition: color 0.2s;
+  z-index: 1;
 }
 
 .instant-action-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-family: inherit;
+  padding-left: 3.2rem !important;
+  padding-right: 3.8rem !important;
+  height: 60px; /* Slightly taller for the "Main" feature */
+  font-size: 1.1rem;
 }
 
 .instant-action-input::placeholder {
@@ -98,18 +94,20 @@
 .instant-action-input:disabled { opacity: 0.5; }
 
 .instant-action-send {
-  width: 38px;
-  height: 38px;
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  position: absolute;
+  right: 0.7rem;
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, #00e6e6, #0099cc);
   border: none;
-  border-radius: 10px;
-  color: white;
+  border-radius: 12px;
+  color: #0f121d;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  transition: opacity 0.2s, transform 0.15s;
+  z-index: 1;
+  transition: all 0.2s ease;
 }
 
 .instant-action-send:hover:not(:disabled) { opacity: 0.9; transform: scale(1.05); }
@@ -158,9 +156,9 @@
 .suggestion-chip {
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  background: rgba(124, 58, 237, 0.1);
-  border: 1px solid rgba(124, 58, 237, 0.25);
-  color: rgba(167, 139, 250, 0.85);
+  background: var(--accent-cyan-transparent);
+  border: 1px solid rgba(0, 230, 230, 0.25);
+  color: var(--accent-cyan);
   font-size: 0.82rem;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -168,9 +166,9 @@
 }
 
 .suggestion-chip:hover {
-  background: rgba(124, 58, 237, 0.2);
-  border-color: rgba(124, 58, 237, 0.5);
-  color: #a78bfa;
+  background: rgba(0, 230, 230, 0.25);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan-hover);
 }
 
 .instant-loading {
@@ -183,7 +181,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  color: #a78bfa;
+  color: var(--accent-cyan);
   font-size: 0.9rem;
   animation: pulse 1.5s infinite ease-in-out;
 }
@@ -204,7 +202,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #a78bfa;
+  color: var(--accent-cyan);
   font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;
@@ -221,9 +219,9 @@
   align-self: flex-start;
   padding: 0.5rem 1.1rem;
   border-radius: 8px;
-  border: 1px solid rgba(124, 58, 237, 0.35);
-  background: rgba(124, 58, 237, 0.1);
-  color: #a78bfa;
+  border: 1px solid rgba(0, 230, 230, 0.35);
+  background: var(--accent-cyan-transparent);
+  color: var(--accent-cyan);
   font-size: 0.85rem;
   cursor: pointer;
   font-family: inherit;
@@ -231,8 +229,8 @@
 }
 
 .ask-another-btn:hover {
-  background: rgba(124, 58, 237, 0.2);
-  border-color: rgba(124, 58, 237, 0.6);
+  background: rgba(0, 230, 230, 0.25);
+  border-color: var(--accent-cyan);
 }
 
 /* Reuse glass-panel from App.css */
@@ -263,7 +261,7 @@
   color: var(--text-primary);
   margin: 1.4rem 0 0.5rem;
   padding-bottom: 0.35rem;
-  border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+  border-bottom: 1px solid rgba(0, 230, 230, 0.2);
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -272,7 +270,7 @@
 .md-h3 {
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--accent-purple-light);
+  color: var(--accent-cyan);
   margin: 1.1rem 0 0.4rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -303,7 +301,7 @@
   content: '▸';
   position: absolute;
   left: -0.2rem;
-  color: var(--accent-purple-light);
+  color: var(--accent-cyan);
   font-size: 0.8rem;
   top: 0.05rem;
 }
@@ -313,7 +311,7 @@
 }
 
 .md-ol li::marker {
-  color: var(--accent-purple-light);
+  color: var(--accent-cyan);
   font-weight: 700;
 }
 
@@ -328,13 +326,13 @@
 }
 
 .md-code {
-  background: rgba(124, 58, 237, 0.12);
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  background: var(--accent-cyan-transparent);
+  border: 1px solid rgba(0, 230, 230, 0.2);
   border-radius: 4px;
   padding: 0.1rem 0.4rem;
   font-size: 0.85em;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  color: #a78bfa;
+  color: var(--accent-cyan);
 }
 
 .md-hr {
