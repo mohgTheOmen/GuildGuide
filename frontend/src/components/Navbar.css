@@ -83,6 +83,14 @@
   font-size: 0.9rem;
 }
 
+.nav-avatar-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--accent-cyan);
+}
+
 .icon-btn {
   color: var(--text-secondary);
   display: flex;

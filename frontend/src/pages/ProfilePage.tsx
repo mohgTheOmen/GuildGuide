@@ -9,7 +9,7 @@ const MOCK_SAVED = [
 ];
 
 const ProfilePage = () => {
-  const { isLoggedIn, username } = useAuth();
+  const { isLoggedIn, username, avatar, bio } = useAuth();
 
   if (!isLoggedIn) {
     return <Navigate to="/login" />;
@@ -22,7 +22,11 @@ const ProfilePage = () => {
       <div className="profile-header glass-panel">
         <div className="profile-info">
           <div className="profile-avatar">
-            {userInitial}
+            {avatar ? (
+              <img src={avatar} alt={username || 'Profile'} className="avatar-img" />
+            ) : (
+              userInitial
+            )}
           </div>
           <div className="profile-details">
             <div className="profile-name-row" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -30,7 +34,7 @@ const ProfilePage = () => {
               <Link to="/settings" className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}>Edit Settings</Link>
             </div>
             <p className="profile-joined">Member since May 2026</p>
-            <p className="profile-bio">Passionate gamer and guide creator. This is your personal space to manage your gaming knowledge and saved strategies.</p>
+            <p className="profile-bio">{bio}</p>
           </div>
         </div>
         

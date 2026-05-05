@@ -22,4 +22,10 @@ public class User {
     
     @Column(nullable = false)
     private String password;
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
 }

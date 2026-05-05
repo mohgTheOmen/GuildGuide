@@ -1,29 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import './SettingsPage.css';
 
 const SettingsPage: React.FC = () => {
-  const [avatar, setAvatar] = useState('');
-  const [username, setUsername] = useState('MohgTheOmen');
-  const [bio, setBio] = useState('');
+  const { username: currentUsername, avatar: currentAvatar, bio: currentBio, updateProfile, changePassword } = useAuth();
+  const navigate = useNavigate();
+  
+  const [avatar, setAvatar] = useState(currentAvatar || '');
+  const [username, setUsername] = useState(currentUsername || '');
+  const [bio, setBio] = useState(currentBio || '');
   
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
+  // Sync with context if it changes elsewhere
+  useEffect(() => {
+    if (currentUsername) setUsername(currentUsername);
+    if (currentAvatar) setAvatar(currentAvatar);
+    if (currentBio) setBio(currentBio);
+  }, [currentUsername, currentAvatar, currentBio]);
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Profile updated successfully!');
+    if (!username.trim()) {
+      toast.error('Username cannot be empty');
+      return;
+    }
+    
+    const loadingToast = toast.loading('Saving changes...');
+    try {
+      await updateProfile({ username, avatar, bio });
+      toast.dismiss(loadingToast);
+      toast.success('Profile updated successfully!');
+      navigate('/profile');
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to update profile');
+    }
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPassword || !newPassword) {
       toast.error('Please fill in both password fields');
       return;
     }
-    toast.success('Password updated successfully!');
-    setCurrentPassword('');
-    setNewPassword('');
+
+    const loadingToast = toast.loading('Updating password...');
+    try {
+      await changePassword(currentPassword, newPassword);
+      toast.dismiss(loadingToast);
+      toast.success('Password updated successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (err: any) {
+      toast.dismiss(loadingToast);
+      toast.error(err.message || 'Failed to update password');
+    }
   };
 
   return (
@@ -51,6 +86,7 @@ const SettingsPage: React.FC = () => {
                 <input 
                   type="text" 
                   id="username" 
+                  placeholder="Enter your username"
                   value={username} 
                   onChange={(e) => setUsername(e.target.value)}
                 />
@@ -77,6 +113,7 @@ const SettingsPage: React.FC = () => {
                 <input 
                   type="password" 
                   id="currentPassword" 
+                  placeholder="Enter current password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                 />
@@ -86,6 +123,7 @@ const SettingsPage: React.FC = () => {
                 <input 
                   type="password" 
                   id="newPassword" 
+                  placeholder="Enter new password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                 />

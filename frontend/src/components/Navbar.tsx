@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { isLoggedIn, username, logout } = useAuth();
+  const { isLoggedIn, username, avatar, logout } = useAuth();
 
   return (
     <header className="navbar-container">
@@ -30,7 +30,11 @@ const Navbar = () => {
           {isLoggedIn ? (
             <div className="user-menu-wrapper">
               <Link to="/profile" className="user-profile-link">
-                <User size={18} />
+                {avatar ? (
+                  <img src={avatar} alt={username || 'Profile'} className="nav-avatar-img" />
+                ) : (
+                  <User size={18} />
+                )}
                 <span>{username}</span>
               </Link>
               <Link to="/settings" className="icon-btn" title="Settings">
