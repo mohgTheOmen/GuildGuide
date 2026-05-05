@@ -54,10 +54,10 @@ public class GuideService {
 
         Guide savedGuide = guideRepository.save(guide);
 
-        return mapToResponse(savedGuide);
+        return mapToResponse(savedGuide, username);
     }
 
-    private GuideResponse mapToResponse(Guide guide) {
+    private GuideResponse mapToResponse(Guide guide, String currentUsername) {
         GuideResponse response = new GuideResponse();
         response.setId(guide.getId());
         response.setTitle(guide.getTitle());
@@ -71,24 +71,32 @@ public class GuideService {
         response.setLikes(guide.getLikes());
         response.setDislikes(guide.getDislikes());
         response.setImageUrl(guide.getImageUrl());
+        
+        if (currentUsername != null) {
+            Optional<Vote> voteOpt = voteRepository.findByUserUsernameAndGuideId(currentUsername, guide.getId());
+            if (voteOpt.isPresent()) {
+                response.setUserVote(voteOpt.get().isUpvote());
+            }
+        }
+        
         return response;
     }
 
-    public List<GuideResponse> getAllGuides() {
+    public List<GuideResponse> getAllGuides(String username) {
         return guideRepository.findAll().stream()
-                .map(this::mapToResponse)
+                .map(g -> mapToResponse(g, username))
                 .collect(Collectors.toList());
     }
 
-    public GuideResponse getGuideById(Long id) {
+    public GuideResponse getGuideById(Long id, String username) {
         Guide guide = guideRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Guide not found"));
-        return mapToResponse(guide);
+        return mapToResponse(guide, username);
     }
 
     public List<GuideResponse> getMyGuides(String username) {
         return guideRepository.findByAuthorUsername(username).stream()
-                .map(this::mapToResponse)
+                .map(g -> mapToResponse(g, username))
                 .collect(Collectors.toList());
     }
 
@@ -113,7 +121,7 @@ public class GuideService {
             guide.setTags(tagsList);
         }
 
-        return mapToResponse(guideRepository.save(guide));
+        return mapToResponse(guideRepository.save(guide), username);
     }
 
     public void deleteGuide(Long id, String username) {
@@ -170,6 +178,6 @@ public class GuideService {
         }
 
         Guide savedGuide = guideRepository.save(guide);
-        return mapToResponse(savedGuide);
+        return mapToResponse(savedGuide, username);
     }
 }

@@ -19,6 +19,13 @@ public class GuideController {
 
     private final GuideService guideService;
 
+    private String getUsername(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser")) {
+            return authentication.getName();
+        }
+        return null;
+    }
+
     @PostMapping
     public ResponseEntity<GuideResponse> createGuide(
             @Valid @RequestBody CreateGuideRequest request,
@@ -30,13 +37,13 @@ public class GuideController {
     }
 
     @GetMapping
-    public ResponseEntity<List<GuideResponse>> getAllGuides() {
-        return ResponseEntity.ok(guideService.getAllGuides());
+    public ResponseEntity<List<GuideResponse>> getAllGuides(Authentication authentication) {
+        return ResponseEntity.ok(guideService.getAllGuides(getUsername(authentication)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<GuideResponse> getGuideById(@PathVariable Long id) {
-        return ResponseEntity.ok(guideService.getGuideById(id));
+    public ResponseEntity<GuideResponse> getGuideById(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(guideService.getGuideById(id, getUsername(authentication)));
     }
 
     @GetMapping("/my")

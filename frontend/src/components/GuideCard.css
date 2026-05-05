@@ -111,5 +111,5 @@
   padding: 0.5rem;
 }
 
-.stat-btn:hover.stat-like { color: #00e676; }
-.stat-btn:hover.stat-dislike { color: #ff1744; }
+.stat-btn:hover.stat-like, .stat-btn.stat-like.active { color: #00e676; }
+.stat-btn:hover.stat-dislike, .stat-btn.stat-dislike.active { color: #ff1744; }

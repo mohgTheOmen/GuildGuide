@@ -14,6 +14,7 @@ export interface GuideProps {
   tags: string[];
   likes: string | number;
   dislikes: string | number;
+  userVote?: boolean | null;
   desc: string;
   image: string;
 }
@@ -22,6 +23,7 @@ const GuideCard: React.FC<{ guide: GuideProps }> = ({ guide }) => {
   const { username } = useAuth();
   const [localLikes, setLocalLikes] = useState(Number(guide.likes));
   const [localDislikes, setLocalDislikes] = useState(Number(guide.dislikes));
+  const [localVote, setLocalVote] = useState<boolean | null | undefined>(guide.userVote);
 
   const handleVote = async (e: React.MouseEvent, isUpvote: boolean) => {
     e.preventDefault(); // Prevent navigating to guide detail
@@ -47,6 +49,7 @@ const GuideCard: React.FC<{ guide: GuideProps }> = ({ guide }) => {
         const updatedGuide = await response.json();
         setLocalLikes(updatedGuide.likes);
         setLocalDislikes(updatedGuide.dislikes);
+        setLocalVote(updatedGuide.userVote);
       } else {
         toast.error('Failed to vote.');
       }
@@ -79,11 +82,11 @@ const GuideCard: React.FC<{ guide: GuideProps }> = ({ guide }) => {
         </div>
       </Link>
       <div className="guide-card-stats">
-        <button className="stat-btn stat-like" onClick={(e) => handleVote(e, true)}>
+        <button className={`stat-btn stat-like ${localVote === true ? 'active' : ''}`} onClick={(e) => handleVote(e, true)}>
           <ThumbsUp size={20} />
           <span>{localLikes}</span>
         </button>
-        <button className="stat-btn stat-dislike" onClick={(e) => handleVote(e, false)}>
+        <button className={`stat-btn stat-dislike ${localVote === false ? 'active' : ''}`} onClick={(e) => handleVote(e, false)}>
           <ThumbsDown size={20} />
           <span>{localDislikes}</span>
         </button>

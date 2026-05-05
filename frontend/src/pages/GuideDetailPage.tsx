@@ -18,6 +18,7 @@ interface Guide {
   likes: number;
   dislikes: number;
   imageUrl: string;
+  userVote?: boolean | null;
 }
 
 interface Comment {
@@ -41,8 +42,10 @@ const GuideDetailPage = () => {
   useEffect(() => {
     const fetchGuideAndComments = async () => {
       try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : undefined;
         const [guideRes, commentsRes] = await Promise.all([
-          fetch(`http://localhost:8080/api/guides/${id}`),
+          fetch(`http://localhost:8080/api/guides/${id}`, { headers }),
           fetch(`http://localhost:8080/api/guides/${id}/comments`)
         ]);
 
@@ -170,9 +173,9 @@ const GuideDetailPage = () => {
             <h2>{guide.title}</h2>
             <div className="content-actions">
               <span className="vote-count">{guide.likes}</span>
-              <button className="icon-btn stat-like" onClick={() => handleVote(true)}><ThumbsUp size={18} /></button>
+              <button className={`icon-btn stat-like ${guide.userVote === true ? 'active' : ''}`} onClick={() => handleVote(true)}><ThumbsUp size={18} /></button>
               <span className="vote-count">{guide.dislikes}</span>
-              <button className="icon-btn stat-dislike" onClick={() => handleVote(false)}><ThumbsDown size={18} /></button>
+              <button className={`icon-btn stat-dislike ${guide.userVote === false ? 'active' : ''}`} onClick={() => handleVote(false)}><ThumbsDown size={18} /></button>
             </div>
           </div>
 

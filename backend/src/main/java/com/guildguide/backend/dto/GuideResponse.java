@@ -18,4 +18,5 @@ public class GuideResponse {
     private Long likes;
     private Long dislikes;
     private String imageUrl;
+    private Boolean userVote;
 }

@@ -144,11 +144,11 @@
   color: var(--text-primary);
 }
 
-.icon-btn.stat-like:hover {
+.icon-btn.stat-like:hover, .icon-btn.stat-like.active {
   color: #00e676;
 }
 
-.icon-btn.stat-dislike:hover {
+.icon-btn.stat-dislike:hover, .icon-btn.stat-dislike.active {
   color: #ff1744;
 }
 

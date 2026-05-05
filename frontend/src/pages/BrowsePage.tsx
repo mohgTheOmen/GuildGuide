@@ -15,7 +15,9 @@ const BrowsePage = () => {
   useEffect(() => {
     const fetchGuides = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/guides');
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : undefined;
+        const response = await fetch('http://localhost:8080/api/guides', { headers });
         if (response.ok) {
           const data = await response.json();
           const formattedGuides = data.map((g: any) => ({
@@ -27,6 +29,7 @@ const BrowsePage = () => {
             tags: g.tags || [],
             likes: g.likes || 0,
             dislikes: g.dislikes || 0,
+            userVote: g.userVote,
             desc: g.content ? g.content.replace(/<[^>]+>/g, '').substring(0, 100) + '...' : 'No description',
             image: g.imageUrl || eldenRingImg
           }));
