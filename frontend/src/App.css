@@ -9,6 +9,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0 1rem;
 }
 
 /* Common UI Elements */
@@ -29,28 +32,28 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
-  color: #fff;
-  font-weight: 600;
+  background: linear-gradient(135deg, #00e6e6, #0099cc);
+  color: #0f121d;
+  font-weight: 700;
   border-radius: 8px;
 }
 
 .btn-primary:hover {
   opacity: 0.9;
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 0 20px rgba(0, 230, 230, 0.4);
   transform: translateY(-1px);
 }
 
 .btn-outline {
   background-color: transparent;
-  border: 1px solid rgba(124, 58, 237, 0.5);
-  color: var(--accent-purple-light);
+  border: 1px solid rgba(0, 230, 230, 0.5);
+  color: var(--accent-cyan);
   border-radius: 8px;
 }
 
 .btn-outline:hover {
-  background-color: var(--accent-purple-transparent);
-  border-color: var(--accent-purple);
+  background-color: var(--accent-cyan-transparent);
+  border-color: var(--accent-cyan);
 }
 
 .btn-ghost {

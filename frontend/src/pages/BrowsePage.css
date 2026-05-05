@@ -1,6 +1,8 @@
 .browse-page {
-  padding: 2.5rem 2.5rem 3rem;
-  max-width: 900px;
+  padding: 3rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .browse-page-header {
@@ -32,32 +34,26 @@
 .browse-search-box {
   flex: 1;
   min-width: 200px;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  background: rgba(15, 22, 41, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 0.7rem 1rem;
-  transition: border-color 0.2s;
 }
 
-.browse-search-box:focus-within {
-  border-color: rgba(124, 58, 237, 0.5);
+.browse-search-box:focus-within .browse-search-icon {
+  color: var(--accent-cyan);
 }
 
 .browse-search-icon {
+  position: absolute;
+  left: 1.2rem;
   color: var(--text-secondary);
-  flex-shrink: 0;
+  pointer-events: none;
+  transition: color 0.2s;
+  z-index: 1;
 }
 
 .browse-search-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-primary);
-  font-size: 0.95rem;
+  padding-left: 3.2rem !important; /* Make room for the icon */
 }
 
 .browse-search-input::placeholder {
@@ -82,7 +78,7 @@
 }
 
 .browse-filters select:focus {
-  border-color: rgba(124, 58, 237, 0.4);
+  border-color: var(--accent-cyan);
   color: var(--text-primary);
 }
 
@@ -137,7 +133,7 @@
 }
 
 .guide-list-card:hover {
-  border-color: rgba(124, 58, 237, 0.35);
+  border-color: rgba(0, 230, 230, 0.35);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
   transform: translateY(-1px);
 }
@@ -146,13 +142,13 @@
 .guide-thumb {
   width: 58px;
   height: 58px;
-  background: rgba(124, 58, 237, 0.1);
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  background: rgba(0, 230, 230, 0.1);
+  border: 1px solid rgba(0, 230, 230, 0.2);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-purple-light);
+  color: var(--accent-cyan);
   flex-shrink: 0;
 }
 

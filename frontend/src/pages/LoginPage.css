@@ -30,21 +30,7 @@
   font-weight: 500;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  color: var(--text-primary);
-  font-size: 1rem;
-  transition: border-color 0.2s ease;
-}
 
-.form-group input:focus {
-  outline: none;
-  border-color: var(--accent-cyan);
-}
 
 .form-actions {
   display: flex;

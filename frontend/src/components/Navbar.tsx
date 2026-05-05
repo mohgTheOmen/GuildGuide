@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Gamepad2, LogOut } from 'lucide-react';
+import { Gamepad2, LogOut, Zap, User, Settings, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
@@ -15,19 +15,31 @@ const Navbar = () => {
         </Link>
         <nav className="navbar-links">
           <Link to="/" className="nav-link">Home</Link>
-          <Link to="/browse" className="nav-link">Browse Guides</Link>
-          {isLoggedIn && <Link to="/dashboard" className="nav-link">Dashboard</Link>}
+          <Link to="/browse" className="nav-link">Browse</Link>
+          {isLoggedIn && (
+            <>
+              <Link to="/instant-action" className="nav-link nav-link-highlight">
+                <Zap size={16} fill="currentColor" />
+                Instant Action
+              </Link>
+              <Link to="/dashboard" className="nav-link">Dashboard</Link>
+            </>
+          )}
         </nav>
         <div className="navbar-actions">
           {isLoggedIn ? (
-            <>
-              <span style={{ color: 'var(--text-secondary)', marginRight: '1rem', fontSize: '0.9rem' }}>
-                Welcome, <strong style={{ color: 'var(--text-primary)' }}>{username}</strong>
-              </span>
-              <button onClick={logout} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem' }}>
-                <LogOut size={18} /> Logout
+            <div className="user-menu-wrapper">
+              <Link to="/profile" className="user-profile-link">
+                <User size={18} />
+                <span>{username}</span>
+              </Link>
+              <Link to="/settings" className="icon-btn" title="Settings">
+                <Settings size={18} />
+              </Link>
+              <button onClick={logout} className="icon-btn logout-btn" title="Logout">
+                <LogOut size={18} />
               </button>
-            </>
+            </div>
           ) : (
             <>
               <Link to="/login" className="btn btn-ghost">Log In</Link>

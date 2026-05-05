@@ -1,24 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-primary: #0a0d1a;
-  --bg-secondary: #0f1629;
-  --bg-tertiary: #1a2140;
+  --bg-primary: #0f121d;
+  --bg-secondary: #171b29;
+  --bg-tertiary: #1f2538;
 
   --text-primary: #f8fafc;
-  --text-secondary: #8892a4;
+  --text-secondary: #94a3b8;
 
-  --accent-purple: #7c3aed;
-  --accent-indigo: #4f46e5;
-  --accent-purple-light: #a78bfa;
-  --accent-purple-transparent: rgba(124, 58, 237, 0.15);
-  --accent-purple-glow: rgba(124, 58, 237, 0.35);
-
-  /* Keep cyan alias so existing components don't break */
-  --accent-cyan: #a78bfa;
-  --accent-cyan-hover: #9061f9;
-  --accent-cyan-transparent: rgba(124, 58, 237, 0.15);
-  --accent-cyan-glow: rgba(124, 58, 237, 0.35);
+  --accent-cyan: #00e6e6;
+  --accent-cyan-hover: #00ffff;
+  --accent-cyan-transparent: rgba(0, 230, 230, 0.15);
+  --accent-cyan-glow: rgba(0, 230, 230, 0.35);
 
   --border-color: rgba(255, 255, 255, 0.07);
   --card-bg: rgba(15, 22, 41, 0.8);
@@ -56,8 +49,31 @@ ul {
   list-style: none;
 }
 
+/* Global Form Styling (Standardized to Browse Page style) */
 input, select, textarea {
-  font-family: inherit;
+  background: rgba(15, 22, 41, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: var(--text-primary);
+  padding: 0.75rem 1.2rem;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  width: 100%;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 12px var(--accent-cyan-glow);
+}
+
+::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+select {
+  cursor: pointer;
+  appearance: none; /* Reset for custom styling if needed later */
 }
 
 /* Scrollbar styling */

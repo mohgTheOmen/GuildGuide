@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import GuideCard from '../components/GuideCard';
+import { useAuth } from '../context/AuthContext';
 import eldenRingImg from '../assets/elden_ring.png';
 import './ProfilePage.css';
 
@@ -8,46 +9,54 @@ const MOCK_SAVED = [
 ];
 
 const ProfilePage = () => {
+  const { isLoggedIn, username } = useAuth();
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" />;
+  }
+
+  const userInitial = username ? username.charAt(0).toUpperCase() : '?';
+
   return (
     <div className="profile-container">
       <div className="profile-header glass-panel">
         <div className="profile-info">
           <div className="profile-avatar">
-            SG
+            {userInitial}
           </div>
           <div className="profile-details">
             <div className="profile-name-row" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <h1 className="profile-name">SomeGuy</h1>
+              <h1 className="profile-name">{username}</h1>
               <Link to="/settings" className="btn btn-outline" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}>Edit Settings</Link>
             </div>
-            <p className="profile-joined">Member since January 2026</p>
-            <p className="profile-bio">Passionate gamer and guide creator, specializing in RPGs and souls-like games. Always happy to help new players!</p>
+            <p className="profile-joined">Member since May 2026</p>
+            <p className="profile-bio">Passionate gamer and guide creator. This is your personal space to manage your gaming knowledge and saved strategies.</p>
           </div>
         </div>
         
         <div className="profile-stats">
           <div className="stat-box">
-            <span className="stat-value">12</span>
+            <span className="stat-value">0</span>
             <span className="stat-label">Guides Created</span>
           </div>
           <div className="stat-box">
-            <span className="stat-value">24</span>
-            <span className="stat-label">Guides Liked</span>
+            <span className="stat-value">1</span>
+            <span className="stat-label">Guides Saved</span>
           </div>
           <div className="stat-box">
-            <span className="stat-value">3,502</span>
+            <span className="stat-value">0</span>
             <span className="stat-label">Total Views</span>
           </div>
           <div className="stat-box">
-            <span className="stat-value">5</span>
-            <span className="stat-label">Games Playing</span>
+            <span className="stat-value">0</span>
+            <span className="stat-label">Reputation</span>
           </div>
         </div>
       </div>
 
       <div className="profile-tabs">
-        <button className="tab">My Games</button>
         <button className="tab active">Saved Guides</button>
+        <button className="tab">My Activity</button>
       </div>
 
       <div className="profile-content">

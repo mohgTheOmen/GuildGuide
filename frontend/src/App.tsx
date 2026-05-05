@@ -28,56 +28,40 @@ const toastStyle = {
   }
 };
 
-const AppLayout = () => {
-  const { isLoggedIn } = useAuth();
-
-  if (isLoggedIn) {
-    return (
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar />
-        <main style={{ marginLeft: '240px', flex: 1, minHeight: '100vh', background: 'var(--bg-primary)' }}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/browse" element={<BrowsePage />} />
-            <Route path="/guide/:id" element={<GuideDetailPage />} />
-            <Route path="/community/:id" element={<CommunityPage />} />
-            <Route path="/create-guide" element={<CreateGuidePage />} />
-            <Route path="/edit-guide/:id" element={<EditGuidePage />} />
-            <Route path="/instant-action" element={<InstantActionPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/game/:gameId" element={<GameHubPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </main>
-      </div>
-    );
-  }
-
-  return (
-    <div className="app-container">
-      <Navbar />
-      <main className="main-content">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/browse" element={<BrowsePage />} />
-          <Route path="/guide/:id" element={<GuideDetailPage />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </main>
-    </div>
-  );
-};
-
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <AppLayout />
+        <div className="app-container">
+          <Navbar />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/browse" element={<BrowsePage />} />
+              <Route path="/guide/:id" element={<GuideDetailPage />} />
+              <Route path="/community/:id" element={<CommunityPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              
+              {/* Auth Routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              
+              {/* Content Creation Routes */}
+              <Route path="/create-guide" element={<CreateGuidePage />} />
+              <Route path="/edit-guide/:id" element={<EditGuidePage />} />
+              <Route path="/instant-action" element={<InstantActionPage />} />
+              
+              {/* User Management Routes */}
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              
+              {/* Discovery & Error Handling Routes */}
+              <Route path="/game/:gameId" element={<GameHubPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </main>
+        </div>
         <Toaster position="bottom-right" toastOptions={toastStyle} />
       </BrowserRouter>
     </AuthProvider>

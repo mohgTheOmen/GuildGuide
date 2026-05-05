@@ -1,13 +1,17 @@
 .dashboard-page {
-  padding: 2.5rem 2.5rem 3rem;
-  max-width: 1000px;
+  padding: 3rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .dashboard-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
+  gap: 2rem;
+  flex-wrap: wrap;
 }
 
 .dashboard-welcome {
@@ -51,8 +55,8 @@
 }
 
 .guide-count {
-  background: rgba(124, 58, 237, 0.2);
-  color: var(--accent-purple-light);
+  background: rgba(0, 230, 230, 0.2);
+  color: var(--accent-cyan);
   padding: 0.1rem 0.5rem;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -92,7 +96,7 @@
 }
 
 .empty-icon {
-  color: rgba(124, 58, 237, 0.4);
+  color: var(--accent-cyan-glow);
 }
 
 .empty-state h3 {
@@ -208,7 +212,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #7c3aed, #6366f1);
+  background: linear-gradient(90deg, #00e6e6, #0099cc);
   border-radius: 10px;
   transition: width 0.5s ease;
 }
@@ -227,9 +231,9 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
-  color: white;
-  font-weight: 600;
+  background: linear-gradient(135deg, #00e6e6, #0099cc);
+  color: #0f121d;
+  font-weight: 700;
   font-size: 0.88rem;
   padding: 0.6rem 1.1rem;
   border-radius: 10px;
@@ -269,8 +273,8 @@
   color: var(--text-secondary);
 }
 .icon-action.edit:hover {
-  background: rgba(124, 58, 237, 0.15);
-  color: var(--accent-purple-light);
+  background: var(--accent-cyan-transparent);
+  color: var(--accent-cyan);
 }
 
 .icon-action.delete {

@@ -1,13 +1,15 @@
 .create-guide-page {
-  padding: 2rem;
+  padding: 3rem 2rem;
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 
 .create-container {
   width: 100%;
-  max-width: 900px;
-  padding: 2.5rem;
+  max-width: 1200px;
+  padding: 3rem; /* Restored and increased internal padding */
+  margin-bottom: 2rem;
 }
 
 .create-guide-form {
@@ -16,8 +18,8 @@
 
 .form-row {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 2.5rem; /* Increased gap between columns */
+  margin-bottom: 2rem; /* Increased space between rows */
 }
 
 @media (max-width: 768px) {
@@ -40,26 +42,6 @@
   color: var(--text-secondary);
   font-size: 0.95rem;
   font-weight: 500;
-}
-
-.create-guide-form input,
-.create-guide-form select,
-.create-guide-form textarea {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  color: var(--text-primary);
-  font-size: 1rem;
-  transition: border-color 0.2s ease;
-}
-
-.create-guide-form input:focus,
-.create-guide-form select:focus,
-.create-guide-form textarea:focus {
-  outline: none;
-  border-color: var(--accent-cyan);
 }
 
 .create-guide-form textarea {
