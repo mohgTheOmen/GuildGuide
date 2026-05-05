@@ -2,6 +2,7 @@ package com.guildguide.backend.controller;
 
 import com.guildguide.backend.dto.CreateGuideRequest;
 import com.guildguide.backend.dto.GuideResponse;
+import com.guildguide.backend.dto.VoteRequest;
 import com.guildguide.backend.service.GuideService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class GuideController {
     public ResponseEntity<GuideResponse> createGuide(
             @Valid @RequestBody CreateGuideRequest request,
             Authentication authentication) {
-        
+
         String username = authentication.getName();
         GuideResponse response = guideService.createGuide(request, username);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -55,5 +56,13 @@ public class GuideController {
     public ResponseEntity<Void> deleteGuide(@PathVariable Long id, Authentication authentication) {
         guideService.deleteGuide(id, authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/vote")
+    public ResponseEntity<GuideResponse> voteGuide(
+            @PathVariable Long id,
+            @RequestBody VoteRequest request,
+            Authentication authentication) {
+        return ResponseEntity.ok(guideService.voteGuide(id, request.isUpvote(), authentication.getName()));
     }
 }

@@ -144,6 +144,14 @@
   color: var(--text-primary);
 }
 
+.icon-btn.stat-like:hover {
+  color: #00e676;
+}
+
+.icon-btn.stat-dislike:hover {
+  color: #ff1744;
+}
+
 .content-body {
   font-size: 1.0625rem;
   line-height: 1.7;

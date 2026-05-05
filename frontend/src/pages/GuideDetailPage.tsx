@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Share2, ThumbsUp, ThumbsDown, MessageSquare, Edit2 } from 'lucide-react';
+import { Share2, ThumbsUp, ThumbsDown, Edit2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import './GuideDetailPage.css';
@@ -45,12 +45,12 @@ const GuideDetailPage = () => {
           fetch(`http://localhost:8080/api/guides/${id}`),
           fetch(`http://localhost:8080/api/guides/${id}/comments`)
         ]);
-        
+
         if (!guideRes.ok) throw new Error('Guide not found');
-        
+
         const guideData = await guideRes.json();
         setGuide(guideData);
-        
+
         if (commentsRes.ok) {
           const commentsData = await commentsRes.json();
           setComments(commentsData);
@@ -94,6 +94,34 @@ const GuideDetailPage = () => {
       }
     } catch (err) {
       toast.error('An error occurred.');
+    }
+  };
+
+  const handleVote = async (isUpvote: boolean) => {
+    if (!username) {
+      toast.error('Please log in to vote.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8080/api/guides/${id}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isUpvote })
+      });
+
+      if (response.ok) {
+        const updatedGuide = await response.json();
+        setGuide(updatedGuide);
+      } else {
+        toast.error('Failed to vote.');
+      }
+    } catch (err) {
+      toast.error('An error occurred while voting.');
     }
   };
 
@@ -142,9 +170,9 @@ const GuideDetailPage = () => {
             <h2>{guide.title}</h2>
             <div className="content-actions">
               <span className="vote-count">{guide.likes}</span>
-              <button className="icon-btn"><ThumbsUp size={18} /></button>
+              <button className="icon-btn stat-like" onClick={() => handleVote(true)}><ThumbsUp size={18} /></button>
               <span className="vote-count">{guide.dislikes}</span>
-              <button className="icon-btn"><ThumbsDown size={18} /></button>
+              <button className="icon-btn stat-dislike" onClick={() => handleVote(false)}><ThumbsDown size={18} /></button>
             </div>
           </div>
 
@@ -152,10 +180,10 @@ const GuideDetailPage = () => {
 
           <div className="comments-section">
             <h3>Comments ({comments.length})</h3>
-            
+
             {username ? (
               <form onSubmit={handleCommentSubmit} className="comment-form">
-                <textarea 
+                <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Add a comment..."

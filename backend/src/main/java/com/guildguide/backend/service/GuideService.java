@@ -10,9 +10,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.guildguide.backend.entity.Vote;
+import com.guildguide.backend.repository.VoteRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +24,7 @@ public class GuideService {
 
     private final GuideRepository guideRepository;
     private final UserRepository userRepository;
+    private final VoteRepository voteRepository;
 
     public GuideResponse createGuide(CreateGuideRequest request, String username) {
         User author = userRepository.findByUsername(username)
@@ -29,7 +34,7 @@ public class GuideService {
         guide.setTitle(request.getTitle());
         guide.setGame(request.getGame());
         guide.setDifficulty(request.getDifficulty());
-        
+
         if (request.getTags() != null && !request.getTags().trim().isEmpty()) {
             List<String> tagsList = Arrays.stream(request.getTags().split(","))
                     .map(String::trim)
@@ -37,9 +42,10 @@ public class GuideService {
                     .collect(Collectors.toList());
             guide.setTags(tagsList);
         }
-        
+
         guide.setContent(request.getContent());
-        guide.setImageUrl(request.getImageUrl() != null ? request.getImageUrl() : "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2070");
+        guide.setImageUrl(request.getImageUrl() != null ? request.getImageUrl()
+                : "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2070");
         guide.setAuthor(author);
         guide.setCreatedAt(LocalDateTime.now());
         guide.setViews(0L);
@@ -47,7 +53,7 @@ public class GuideService {
         guide.setDislikes(0L);
 
         Guide savedGuide = guideRepository.save(guide);
-        
+
         return mapToResponse(savedGuide);
     }
 
@@ -119,5 +125,51 @@ public class GuideService {
         }
 
         guideRepository.delete(guide);
+    }
+
+    public GuideResponse voteGuide(Long guideId, boolean isUpvote, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Guide guide = guideRepository.findById(guideId)
+                .orElseThrow(() -> new RuntimeException("Guide not found"));
+
+        Optional<Vote> existingVoteOpt = voteRepository.findByUserAndGuide(user, guide);
+
+        if (existingVoteOpt.isPresent()) {
+            Vote existingVote = existingVoteOpt.get();
+            if (existingVote.isUpvote() == isUpvote) {
+                if (isUpvote) {
+                    guide.setLikes(guide.getLikes() - 1);
+                } else {
+                    guide.setDislikes(guide.getDislikes() - 1);
+                }
+                voteRepository.delete(existingVote);
+            } else {
+                if (isUpvote) {
+                    guide.setLikes(guide.getLikes() + 1);
+                    guide.setDislikes(guide.getDislikes() - 1);
+                } else {
+                    guide.setLikes(guide.getLikes() - 1);
+                    guide.setDislikes(guide.getDislikes() + 1);
+                }
+                existingVote.setUpvote(isUpvote);
+                voteRepository.save(existingVote);
+            }
+        } else {
+            Vote newVote = new Vote();
+            newVote.setUser(user);
+            newVote.setGuide(guide);
+            newVote.setUpvote(isUpvote);
+            voteRepository.save(newVote);
+
+            if (isUpvote) {
+                guide.setLikes(guide.getLikes() + 1);
+            } else {
+                guide.setDislikes(guide.getDislikes() + 1);
+            }
+        }
+
+        Guide savedGuide = guideRepository.save(guide);
+        return mapToResponse(savedGuide);
     }
 }
