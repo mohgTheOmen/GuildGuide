@@ -1,0 +1,11 @@
+to do list for later:
+- user profile on comments
+- allow user to delete comment only if writer(display own comment separately from other comments, similar to youtube comment section)
+- allow draft saving
+- allow to save guides (use star button on the right of the screen, just make another one for sharing with the share symbol, like the one at the top of the guide)
+- allow adding cover picture when creating/editing guide
+- fix my activity in user profile to display user comments from guides
+- find a way to track views on guides
+- add more games to the select in create guide (all that are present in the browse page dropdown)
+- fix jodit bug in create guide where a line appears on the screen when user hovers over the bottom part of the text field
+- make logout button redirect you to home page
