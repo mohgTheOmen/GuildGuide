@@ -93,7 +93,7 @@ const formatGameName = (game?: string) => {
 
 const GuideDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { username } = useAuth();
+  const { username, role } = useAuth();
   const navigate = useNavigate();
   const [guide, setGuide] = useState<Guide | null>(null);
   const [loading, setLoading] = useState(true);
@@ -280,6 +280,7 @@ const GuideDetailPage = () => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
+  const isAdmin = role === 'ADMIN';
   const renderComment = (c: Comment, isOwn: boolean) => (
     <div key={c.id} className="comment-item">
       <div className="comment-header">
@@ -298,7 +299,7 @@ const GuideDetailPage = () => {
           </span>
         </div>
         <div className="comment-card-actions">
-          {isOwn && (
+          {(isOwn || isAdmin) && (
             <button className="comment-delete-btn" onClick={() => handleDeleteComment(c.id)}>
               Delete
             </button>

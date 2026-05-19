@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, MessageSquare, Quote } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './CommunityPage.css';
 
 interface Comment {
@@ -18,6 +19,7 @@ interface Guide {
 const CommunityPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { role } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [guide, setGuide] = useState<Guide | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,6 +41,27 @@ const CommunityPage = () => {
     };
     fetchData();
   }, [id]);
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!id) return;
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:8080/api/guides/${id}/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setComments(prev => prev.filter(c => c.id !== commentId));
+      } else {
+        console.error('Failed to delete comment');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const isAdmin = role === 'ADMIN';
 
   return (
     <div className="community-page">
@@ -89,6 +112,11 @@ const CommunityPage = () => {
                   <span className="review-date">
                     {new Date(comment.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
+                  {isAdmin && (
+                    <button className="review-delete-btn" onClick={() => handleDeleteComment(comment.id)}>
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
