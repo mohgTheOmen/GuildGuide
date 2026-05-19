@@ -111,6 +111,24 @@ public class CommentService {
         commentRepository.delete(comment);
     }
 
+    public CommentResponse updateComment(Long commentId, CommentRequest request, String username) {
+        if (request == null || request.getContent() == null || request.getContent().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Content is required");
+        }
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        ensurePublished(comment.getGuide());
+
+        if (!comment.getAuthor().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to edit this comment");
+        }
+
+        comment.setContent(request.getContent().trim());
+        return mapToResponse(commentRepository.save(comment), username);
+    }
+
     public List<CommentResponse> getCommentsByAuthor(String username) {
         User author = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));

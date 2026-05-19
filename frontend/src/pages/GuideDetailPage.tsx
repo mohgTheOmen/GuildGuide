@@ -101,6 +101,8 @@ const GuideDetailPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [completed, setCompleted] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState('');
 
   useEffect(() => {
     const fetchGuideAndComments = async () => {
@@ -262,6 +264,46 @@ const GuideDetailPage = () => {
     }
   };
 
+  const startEditComment = (c: Comment) => {
+    setEditingCommentId(c.id);
+    setEditingContent(c.content);
+  };
+
+  const cancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditingContent('');
+  };
+
+  const saveEditComment = async () => {
+    if (!username) {
+      toast.error('Please log in.');
+      return;
+    }
+    if (!editingCommentId) return;
+    if (!editingContent.trim()) {
+      toast.error('Comment cannot be empty.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:8080/api/guides/${id}/comments/${editingCommentId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ content: editingContent })
+      });
+      if (!res.ok) {
+        throw new Error('Failed');
+      }
+      const updated = await res.json();
+      setComments(prev => prev.map(c => c.id === editingCommentId ? updated : c));
+      toast.success('Comment updated');
+      cancelEditComment();
+    } catch {
+      toast.error('Failed to update comment');
+    }
+  };
+
   if (loading) return <div className="active-guide-page"><div className="active-guide-loading">Loading guide...</div></div>;
   if (error || !guide) return <div className="active-guide-page"><div className="active-guide-loading">{error}</div></div>;
 
@@ -299,10 +341,25 @@ const GuideDetailPage = () => {
           </span>
         </div>
         <div className="comment-card-actions">
-          {(isOwn || isAdmin) && (
+          {isOwn && editingCommentId !== c.id && (
+            <button className="comment-vote-btn" onClick={() => startEditComment(c)}>
+              Edit
+            </button>
+          )}
+          {(isOwn || isAdmin) && editingCommentId !== c.id && (
             <button className="comment-delete-btn" onClick={() => handleDeleteComment(c.id)}>
               Delete
             </button>
+          )}
+          {isOwn && editingCommentId === c.id && (
+            <>
+              <button className="comment-vote-btn" onClick={saveEditComment}>
+                Save
+              </button>
+              <button className="comment-vote-btn" onClick={cancelEditComment}>
+                Cancel
+              </button>
+            </>
           )}
           <button className={`comment-vote-btn ${c.userVote === true ? 'active-like' : ''}`} onClick={() => handleCommentVote(c.id, true)}>
             <ThumbsUp size={14} />
@@ -314,7 +371,16 @@ const GuideDetailPage = () => {
           </button>
         </div>
       </div>
-      <p className="comment-body">{c.content}</p>
+      {editingCommentId === c.id ? (
+        <textarea
+          className="comment-input comment-edit-input"
+          value={editingContent}
+          onChange={e => setEditingContent(e.target.value)}
+          rows={3}
+        />
+      ) : (
+        <p className="comment-body">{c.content}</p>
+      )}
     </div>
   );
 

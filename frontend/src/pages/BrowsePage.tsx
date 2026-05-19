@@ -12,6 +12,7 @@ const BrowsePage = () => {
   const [search, setSearch] = useState('');
   const [game, setGame] = useState('');
   const [sort, setSort] = useState('Newest');
+  const [tagFilter, setTagFilter] = useState('');
 
   useEffect(() => {
     const fetchGuides = async () => {
@@ -24,6 +25,7 @@ const BrowsePage = () => {
         const params = new URLSearchParams();
         if (search) params.append('search', search);
         if (game) params.append('game', game);
+        if (tagFilter) params.append('category', tagFilter);
         if (sort) params.append('sort', sort);
 
         const res = await fetch(`http://localhost:8080/api/guides?${params.toString()}`, { headers });
@@ -37,7 +39,11 @@ const BrowsePage = () => {
 
     const timer = setTimeout(fetchGuides, 300);
     return () => clearTimeout(timer);
-  }, [search, game, sort]);
+  }, [search, game, sort, tagFilter]);
+
+  const toggleTagFilter = (tag: string) => {
+    setTagFilter(prev => prev.toLowerCase() === tag.toLowerCase() ? '' : tag);
+  };
 
   const tagColor = (tag: string) => {
     const colors: Record<string, string> = {
@@ -117,12 +123,20 @@ const BrowsePage = () => {
                 <div className="guide-list-body">
                   <div className="guide-list-tags">
                     {tags.slice(0, 3).map(t => (
-                      <span key={t} className="guide-tag" style={{ color: tagColor(t), borderColor: tagColor(t) + '40', background: tagColor(t) + '15' }}>
+                      <span
+                        key={t}
+                        className={`guide-tag ${tagFilter && tagFilter.toLowerCase() === t.toLowerCase() ? 'guide-tag-active' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); toggleTagFilter(t); }}
+                        style={{ color: tagColor(t), borderColor: tagColor(t) + '40', background: tagColor(t) + '15' }}
+                      >
                         {t}
                       </span>
                     ))}
                     {g.difficulty && (
-                      <span className={`guide-tag ${difficultyClass(g.difficulty)}`}>
+                      <span
+                        className={`guide-tag ${difficultyClass(g.difficulty)} ${tagFilter && tagFilter.toLowerCase() === g.difficulty.toLowerCase() ? 'guide-tag-active' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); toggleTagFilter(g.difficulty); }}
+                      >
                         {formatDifficulty(g.difficulty)}
                       </span>
                     )}

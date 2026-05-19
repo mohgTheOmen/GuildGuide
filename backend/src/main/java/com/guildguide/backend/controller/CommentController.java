@@ -50,6 +50,15 @@ public class CommentController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{commentId}")
+    public ResponseEntity<CommentResponse> updateComment(
+            @PathVariable Long guideId,
+            @PathVariable Long commentId,
+            @RequestBody CommentRequest request,
+            Authentication authentication) {
+        return ResponseEntity.ok(commentService.updateComment(commentId, request, authentication.getName()));
+    }
+
     @PostMapping("/{commentId}/vote")
     public ResponseEntity<CommentResponse> voteComment(
             @PathVariable Long guideId,

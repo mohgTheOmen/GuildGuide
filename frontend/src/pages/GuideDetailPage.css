@@ -250,6 +250,7 @@
   color: var(--text-primary);
   font-family: inherit;
   font-size: 0.92rem;
+  box-sizing: border-box;
   resize: vertical;
   outline: none;
   transition: border-color 0.2s;
@@ -279,7 +280,7 @@
 }
 
 .comment-item {
-  --comment-action-space: 13rem;
+  --comment-action-space: 18rem;
   background: linear-gradient(180deg, rgba(15, 22, 41, 0.82), rgba(15, 22, 41, 0.62));
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 14px;
@@ -384,6 +385,13 @@
   word-break: break-word;
 }
 
+.comment-edit-input {
+  margin-left: 3.55rem;
+  padding-right: var(--comment-action-space);
+  width: calc(100% - 3.55rem);
+  max-width: calc(100% - 3.55rem);
+}
+
 .comment-card-actions {
   display: flex;
   align-items: center;
@@ -485,6 +493,13 @@
 
   .comment-body {
     padding-right: 0;
+  }
+
+  .comment-edit-input {
+    margin-left: 0;
+    padding-right: 0;
+    width: 100%;
+    max-width: 100%;
   }
 
   .comment-card-actions {

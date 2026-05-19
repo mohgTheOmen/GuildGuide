@@ -181,6 +181,16 @@
   border-radius: 20px;
   border: 1px solid;
   text-transform: capitalize;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.guide-tag:hover {
+  filter: brightness(1.1);
+}
+
+.guide-tag:active {
+  transform: translateY(1px);
 }
 
 .guide-list-title {
