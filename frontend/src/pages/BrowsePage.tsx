@@ -5,6 +5,9 @@ import './BrowsePage.css';
 
 const DEFAULT_GUIDE_IMAGE = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2070';
 
+const DIFFICULTY_OPTIONS = ['beginner', 'intermediate', 'advanced'] as const;
+type Difficulty = typeof DIFFICULTY_OPTIONS[number];
+
 const BrowsePage = () => {
   const navigate = useNavigate();
   const [guides, setGuides] = useState<any[]>([]);
@@ -13,6 +16,11 @@ const BrowsePage = () => {
   const [game, setGame] = useState('');
   const [sort, setSort] = useState('Newest');
   const [tagFilter, setTagFilter] = useState('');
+
+  const normalizedTagFilter = tagFilter.trim().toLowerCase();
+  const selectedDifficulty: '' | Difficulty = (DIFFICULTY_OPTIONS as readonly string[]).includes(normalizedTagFilter)
+    ? (normalizedTagFilter as Difficulty)
+    : '';
 
   useEffect(() => {
     const fetchGuides = async () => {
@@ -44,6 +52,15 @@ const BrowsePage = () => {
   const toggleTagFilter = (tag: string) => {
     setTagFilter(prev => prev.toLowerCase() === tag.toLowerCase() ? '' : tag);
   };
+
+  const clearAllFilters = () => {
+    setSearch('');
+    setGame('');
+    setSort('Newest');
+    setTagFilter('');
+  };
+
+  const hasAnyFilters = Boolean(search.trim() || game || tagFilter || (sort && sort !== 'Newest'));
 
   const tagColor = (tag: string) => {
     const colors: Record<string, string> = {
@@ -91,6 +108,16 @@ const BrowsePage = () => {
             <option value="Hearts of Iron IV">Hearts of Iron IV</option>
             <option value="Minecraft">Minecraft</option>
           </select>
+          <select
+            value={selectedDifficulty}
+            onChange={e => setTagFilter(e.target.value)}
+            aria-label="Filter by difficulty"
+          >
+            <option value="">All Difficulties</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
           <select value={sort} onChange={e => setSort(e.target.value)}>
             <option>Newest</option>
             <option>Most Popular</option>
@@ -98,6 +125,52 @@ const BrowsePage = () => {
           </select>
         </div>
       </div>
+
+      {hasAnyFilters && (
+        <div className="browse-active-filters" aria-label="Active filters">
+          <span className="active-filters-label">Active:</span>
+
+          {search.trim() && (
+            <span className="active-filter-chip">
+              Search: {search.trim()}
+              <button className="active-filter-clear" type="button" onClick={() => setSearch('')} aria-label="Clear search">
+                ×
+              </button>
+            </span>
+          )}
+
+          {game && (
+            <span className="active-filter-chip">
+              Game: {game}
+              <button className="active-filter-clear" type="button" onClick={() => setGame('')} aria-label="Clear game filter">
+                ×
+              </button>
+            </span>
+          )}
+
+          {tagFilter && (
+            <span className="active-filter-chip">
+              {selectedDifficulty ? `Difficulty: ${formatDifficulty(selectedDifficulty)}` : `Tag: ${tagFilter}`}
+              <button className="active-filter-clear" type="button" onClick={() => setTagFilter('')} aria-label="Clear tag/difficulty filter">
+                ×
+              </button>
+            </span>
+          )}
+
+          {sort && sort !== 'Newest' && (
+            <span className="active-filter-chip">
+              Sort: {sort}
+              <button className="active-filter-clear" type="button" onClick={() => setSort('Newest')} aria-label="Reset sort">
+                ×
+              </button>
+            </span>
+          )}
+
+          <button className="active-filters-reset" type="button" onClick={clearAllFilters}>
+            Clear all
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="browse-skeleton">

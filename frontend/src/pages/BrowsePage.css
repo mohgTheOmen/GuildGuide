@@ -65,6 +65,67 @@
   gap: 0.5rem;
 }
 
+.browse-active-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: -0.75rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.active-filters-label {
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+.active-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+}
+
+.active-filter-clear {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.active-filter-clear:hover {
+  color: var(--text-primary);
+  border-color: rgba(0, 230, 230, 0.35);
+}
+
+.active-filters-reset {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.active-filters-reset:hover {
+  color: var(--text-primary);
+  border-color: rgba(0, 230, 230, 0.35);
+}
+
 .browse-filters select {
   background: rgba(15, 22, 41, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -191,6 +252,11 @@
 
 .guide-tag:active {
   transform: translateY(1px);
+}
+
+.guide-tag-active {
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.10);
+  filter: brightness(1.15);
 }
 
 .guide-list-title {
