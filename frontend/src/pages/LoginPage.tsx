@@ -32,7 +32,7 @@ const LoginPage: React.FC = () => {
       const data = await response.json();
       localStorage.setItem('token', data.token);
       toast.dismiss(loadingToast);
-      login(data.username);
+      login(data.username, data.role);
       toast.success('Logged in successfully!');
       navigate('/dashboard');
     } catch (error) {

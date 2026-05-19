@@ -5,7 +5,8 @@ interface AuthContextType {
   username: string | null;
   avatar: string | null;
   bio: string | null;
-  login: (username: string) => void;
+  role: string | null;
+  login: (username: string, role?: string) => void;
   logout: () => void;
   updateProfile: (data: { username?: string, avatar?: string, bio?: string }) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
@@ -26,6 +27,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [bio, setBio] = useState<string | null>(() => {
     return localStorage.getItem('userBio') || "No bio.";
   });
+  const [role, setRole] = useState<string | null>(() => {
+    return localStorage.getItem('userRole') || 'USER';
+  });
 
   const fetchUserProfile = async () => {
     const token = localStorage.getItem('token');
@@ -40,6 +44,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUsername(data.username);
         setAvatar(data.avatarUrl);
         setBio(data.bio || "No bio.");
+        setRole(data.role || 'USER');
       }
     } catch (e) {
       console.error("Failed to fetch profile", e);
@@ -57,11 +62,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (username) localStorage.setItem('username', username);
     if (avatar) localStorage.setItem('userAvatar', avatar);
     if (bio) localStorage.setItem('userBio', bio);
-  }, [isLoggedIn, username, avatar, bio]);
+    if (role) localStorage.setItem('userRole', role);
+  }, [isLoggedIn, username, avatar, bio, role]);
 
-  const login = (name: string) => {
+  const login = (name: string, newRole?: string) => {
     setIsLoggedIn(true);
     setUsername(name);
+    if (newRole) setRole(newRole);
   };
 
   const logout = () => {
@@ -69,6 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUsername(null);
     setAvatar(null);
     setBio(null);
+    setRole(null);
     localStorage.clear();
   };
 
@@ -95,6 +103,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUsername(updated.username);
         setAvatar(updated.avatarUrl);
         setBio(updated.bio || "No bio.");
+        setRole(updated.role || 'USER');
       }
     } catch (e) {
       console.error("Failed to update profile", e);
@@ -121,7 +130,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, username, avatar, bio, login, logout, updateProfile, changePassword }}>
+    <AuthContext.Provider value={{ isLoggedIn, username, avatar, bio, role, login, logout, updateProfile, changePassword }}>
       {children}
     </AuthContext.Provider>
   );
@@ -134,3 +143,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

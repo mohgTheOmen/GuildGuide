@@ -36,4 +36,8 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "guide_id")
     )
     private java.util.List<Guide> savedGuides;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
 }

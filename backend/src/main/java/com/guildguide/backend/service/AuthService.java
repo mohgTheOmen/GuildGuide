@@ -3,6 +3,7 @@ package com.guildguide.backend.service;
 import com.guildguide.backend.dto.AuthResponse;
 import com.guildguide.backend.dto.LoginRequest;
 import com.guildguide.backend.dto.RegisterRequest;
+import com.guildguide.backend.entity.Role;
 import com.guildguide.backend.entity.User;
 import com.guildguide.backend.repository.UserRepository;
 import com.guildguide.backend.security.JwtUtil;
@@ -30,11 +31,12 @@ public class AuthService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.USER)
                 .build();
         
         userRepository.save(user);
-        String token = jwtUtil.generateToken(user.getUsername());
-        return new AuthResponse(token, user.getUsername());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
+        return new AuthResponse(token, user.getUsername(), user.getRole().name());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -45,7 +47,8 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
         
-        String token = jwtUtil.generateToken(user.getUsername());
-        return new AuthResponse(token, user.getUsername());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
+        return new AuthResponse(token, user.getUsername(), user.getRole().name());
     }
 }
+

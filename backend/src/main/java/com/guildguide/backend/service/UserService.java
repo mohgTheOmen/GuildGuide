@@ -25,6 +25,7 @@ public class UserService {
                 .email(user.getEmail())
                 .avatarUrl(user.getAvatarUrl())
                 .bio(user.getBio())
+                .role(user.getRole().name())
                 .build();
     }
 
@@ -55,6 +56,7 @@ public class UserService {
                 .email(updatedUser.getEmail())
                 .avatarUrl(updatedUser.getAvatarUrl())
                 .bio(updatedUser.getBio())
+                .role(updatedUser.getRole().name())
                 .build();
     }
 

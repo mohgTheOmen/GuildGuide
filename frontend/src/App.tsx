@@ -18,6 +18,7 @@ import InstantActionPage from './pages/InstantActionPage';
 import SettingsPage from './pages/SettingsPage';
 import GameHubPage from './pages/GameHubPage';
 import NotFoundPage from './pages/NotFoundPage';
+import AdminRoute from './components/AdminRoute';
 import './App.css';
 
 const toastStyle = {
@@ -56,6 +57,12 @@ function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               
+              {/* Admin Routes */}
+              <Route element={<AdminRoute />}>
+                {/* Admin Dashboard will go here */}
+                <Route path="/admin" element={<div style={{padding: '2rem', color: 'white'}}>Admin Dashboard Placeholder</div>} />
+              </Route>
+
               {/* Discovery & Error Handling Routes */}
               <Route path="/game/:gameId" element={<GameHubPage />} />
               <Route path="*" element={<NotFoundPage />} />

@@ -99,10 +99,12 @@ public class CommentService {
     }
 
     public void deleteComment(Long commentId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
         
-        if (!comment.getAuthor().getUsername().equals(username)) {
+        if (!comment.getAuthor().getUsername().equals(username) && !user.getRole().name().equals("ADMIN")) {
             throw new RuntimeException("Not authorized to delete this comment");
         }
         
