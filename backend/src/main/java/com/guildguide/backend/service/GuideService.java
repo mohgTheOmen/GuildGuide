@@ -7,7 +7,9 @@ import com.guildguide.backend.entity.User;
 import com.guildguide.backend.repository.GuideRepository;
 import com.guildguide.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -23,9 +25,36 @@ import com.guildguide.backend.repository.VoteRepository;
 @RequiredArgsConstructor
 public class GuideService {
 
+    private static final String DEFAULT_IMAGE_URL =
+            "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2070";
+
     private final GuideRepository guideRepository;
     private final UserRepository userRepository;
     private final VoteRepository voteRepository;
+
+    private String resolveImageUrl(String imageUrl) {
+        return imageUrl != null && !imageUrl.trim().isEmpty() ? imageUrl.trim() : DEFAULT_IMAGE_URL;
+    }
+
+    private boolean isDraft(Guide guide) {
+        return Boolean.TRUE.equals(guide.getIsDraft());
+    }
+
+    private boolean isAuthor(Guide guide, String username) {
+        return username != null && guide.getAuthor().getUsername().equals(username);
+    }
+
+    private void ensureCanAccessGuide(Guide guide, String username) {
+        if (isDraft(guide) && !isAuthor(guide, username)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Guide not found");
+        }
+    }
+
+    private void ensurePublished(Guide guide) {
+        if (isDraft(guide)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Guide not found");
+        }
+    }
 
     public GuideResponse createGuide(CreateGuideRequest request, String username) {
         User author = userRepository.findByUsername(username)
@@ -45,8 +74,8 @@ public class GuideService {
         }
 
         guide.setContent(request.getContent());
-        guide.setImageUrl(request.getImageUrl() != null ? request.getImageUrl()
-                : "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2070");
+        guide.setImageUrl(resolveImageUrl(request.getImageUrl()));
+        guide.setIsDraft(request.getIsDraft() != null ? request.getIsDraft() : false);
         guide.setAuthor(author);
         guide.setCreatedAt(LocalDateTime.now());
         guide.setViews(0L);
@@ -71,20 +100,34 @@ public class GuideService {
         response.setViews(guide.getViews());
         response.setLikes(guide.getLikes());
         response.setDislikes(guide.getDislikes());
-        response.setImageUrl(guide.getImageUrl());
+        response.setImageUrl(resolveImageUrl(guide.getImageUrl()));
+        response.setIsDraft(isDraft(guide));
 
         if (currentUsername != null) {
             Optional<Vote> voteOpt = voteRepository.findByUserUsernameAndGuideId(currentUsername, guide.getId());
             if (voteOpt.isPresent()) {
                 response.setUserVote(voteOpt.get().isUpvote());
             }
+            
+            Optional<User> userOpt = userRepository.findByUsername(currentUsername);
+            if (userOpt.isPresent()) {
+                User u = userOpt.get();
+                if (u.getSavedGuides() != null) {
+                    response.setIsSaved(u.getSavedGuides().contains(guide));
+                } else {
+                    response.setIsSaved(false);
+                }
+            }
+        } else {
+            response.setIsSaved(false);
         }
 
         return response;
     }
 
     public List<GuideResponse> getAllGuides(String game, String category, String search, String sort, String username) {
-        Stream<Guide> stream = guideRepository.findAll().stream();
+        Stream<Guide> stream = guideRepository.findAll().stream()
+                .filter(g -> !isDraft(g));
 
         if (game != null && !game.trim().isEmpty() && !game.equalsIgnoreCase("All Games")) {
             stream = stream.filter(g -> g.getGame() != null && g.getGame().toLowerCase().contains(game.toLowerCase()));
@@ -125,6 +168,7 @@ public class GuideService {
     public GuideResponse getGuideById(Long id, String username) {
         Guide guide = guideRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Guide not found"));
+        ensureCanAccessGuide(guide, username);
         return mapToResponse(guide, username);
     }
 
@@ -146,6 +190,10 @@ public class GuideService {
         guide.setGame(request.getGame());
         guide.setDifficulty(request.getDifficulty());
         guide.setContent(request.getContent());
+        guide.setImageUrl(resolveImageUrl(request.getImageUrl()));
+        if (request.getIsDraft() != null) {
+            guide.setIsDraft(request.getIsDraft());
+        }
 
         if (request.getTags() != null && !request.getTags().trim().isEmpty()) {
             List<String> tagsList = Arrays.stream(request.getTags().split(","))
@@ -174,6 +222,7 @@ public class GuideService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Guide guide = guideRepository.findById(guideId)
                 .orElseThrow(() -> new RuntimeException("Guide not found"));
+        ensurePublished(guide);
 
         Optional<Vote> existingVoteOpt = voteRepository.findByUserAndGuide(user, guide);
 
@@ -213,5 +262,45 @@ public class GuideService {
 
         Guide savedGuide = guideRepository.save(guide);
         return mapToResponse(savedGuide, username);
+    }
+
+    public List<GuideResponse> getSavedGuides(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (user.getSavedGuides() == null) return List.of();
+        
+        return user.getSavedGuides().stream()
+                .filter(g -> !isDraft(g))
+                .map(g -> mapToResponse(g, username))
+                .collect(Collectors.toList());
+    }
+
+    public void toggleSaveGuide(Long guideId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Guide guide = guideRepository.findById(guideId)
+                .orElseThrow(() -> new RuntimeException("Guide not found"));
+        ensurePublished(guide);
+
+        if (user.getSavedGuides() == null) {
+            user.setSavedGuides(new java.util.ArrayList<>());
+        }
+
+        if (user.getSavedGuides().contains(guide)) {
+            user.getSavedGuides().remove(guide);
+        } else {
+            user.getSavedGuides().add(guide);
+        }
+        
+        userRepository.save(user);
+    }
+
+    public void incrementViews(Long guideId) {
+        Guide guide = guideRepository.findById(guideId).orElse(null);
+        if (guide != null && !isDraft(guide)) {
+            guide.setViews((guide.getViews() == null ? 0L : guide.getViews()) + 1L);
+            guideRepository.save(guide);
+        }
     }
 }

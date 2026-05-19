@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Share2, ThumbsUp, ThumbsDown, Edit2, ChevronLeft, Monitor, Star, MessageSquare } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronUp, Share2, Star, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import './GuideDetailPage.css';
@@ -18,14 +18,20 @@ interface Guide {
   likes: number;
   dislikes: number;
   userVote?: boolean | null;
+  isSaved?: boolean;
+  isDraft?: boolean;
 }
 
 interface Comment {
   id: number;
   content: string;
   authorUsername: string;
+  authorAvatarUrl?: string;
   guideId: number;
   createdAt: string;
+  likes: number;
+  dislikes: number;
+  userVote?: boolean | null;
 }
 
 // Store progress in localStorage
@@ -68,6 +74,23 @@ const parseSections = (html: string): Array<{ title: string; body: string }> => 
   return sections;
 };
 
+const formatDifficulty = (difficulty?: string) => {
+  if (!difficulty) return '';
+  return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+};
+
+const difficultyClass = (difficulty?: string) => {
+  return difficulty ? `difficulty-chip difficulty-${difficulty.toLowerCase()}` : '';
+};
+
+const formatGameName = (game?: string) => {
+  if (!game) return 'Unknown Game';
+  return game
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 const GuideDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { username } = useAuth();
@@ -84,18 +107,35 @@ const GuideDetailPage = () => {
       try {
         const token = localStorage.getItem('token');
         const headers = token ? { 'Authorization': `Bearer ${token}` } : undefined;
+        
+        // Fetch guide details to increment views automatically
+        // First increment the views
+        if (token) {
+          await fetch(`http://localhost:8080/api/guides/${id}/view`, {
+            method: 'POST',
+            headers
+          }).catch(console.error); // Ignore errors here, just fire and forget
+        }
+        
         const [guideRes, commentsRes] = await Promise.all([
           fetch(`http://localhost:8080/api/guides/${id}`, { headers }),
-          fetch(`http://localhost:8080/api/guides/${id}/comments`)
+          fetch(`http://localhost:8080/api/guides/${id}/comments`, { headers })
         ]);
         if (!guideRes.ok) throw new Error('Guide not found');
         const guideData = await guideRes.json();
+
+        if (guideData.isDraft) {
+          navigate(`/edit-guide/${guideData.id}`, { replace: true });
+          return;
+        }
+
         setGuide(guideData);
 
-        // Save to localStorage for sidebar/community link + set progress
-        localStorage.setItem('lastGuideId', String(guideData.id));
-        localStorage.setItem('lastGuideTitle', guideData.title);
-        saveProgress(guideData.id, 10);
+        if (!guideData.isDraft) {
+          localStorage.setItem('lastGuideId', String(guideData.id));
+          localStorage.setItem('lastGuideTitle', guideData.title);
+          saveProgress(guideData.id, 10);
+        }
 
         // Check if already completed
         const map = JSON.parse(localStorage.getItem('guideProgress') || '{}');
@@ -109,11 +149,38 @@ const GuideDetailPage = () => {
       }
     };
     fetchGuideAndComments();
-  }, [id]);
+  }, [id, username, navigate]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success('Link copied to clipboard!');
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToBottom = () => {
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+  };
+
+  const handleToggleSave = async () => {
+    if (!username) { toast.error('Please log in to save guides.'); return; }
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:8080/api/users/me/saved-guides/${id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setGuide(prev => prev ? { ...prev, isSaved: !prev.isSaved } : null);
+        toast.success(guide?.isSaved ? 'Guide removed from saved' : 'Guide saved successfully');
+      } else {
+        toast.error('Failed to toggle save state.');
+      }
+    } catch {
+      toast.error('An error occurred.');
+    }
   };
 
   const handleMarkComplete = () => {
@@ -156,11 +223,99 @@ const GuideDetailPage = () => {
     } catch { toast.error('An error occurred while voting.'); }
   };
 
+  const handleCommentVote = async (commentId: number, isUpvote: boolean) => {
+    if (!username) { toast.error('Please log in to vote on comments.'); return; }
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:8080/api/guides/${id}/comments/${commentId}/vote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ isUpvote })
+      });
+      if (res.ok) {
+        const updatedComment = await res.json();
+        setComments(comments.map(c => c.id === commentId ? updatedComment : c));
+      } else {
+        toast.error('Failed to vote on comment.');
+      }
+    } catch {
+      toast.error('An error occurred while voting on the comment.');
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:8080/api/guides/${id}/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setComments(comments.filter(c => c.id !== commentId));
+        toast.success('Comment deleted!');
+      } else {
+        toast.error('Failed to delete comment.');
+      }
+    } catch {
+      toast.error('An error occurred.');
+    }
+  };
+
   if (loading) return <div className="active-guide-page"><div className="active-guide-loading">Loading guide...</div></div>;
   if (error || !guide) return <div className="active-guide-page"><div className="active-guide-loading">{error}</div></div>;
 
-  const isAuthor = username === guide.authorUsername;
   const sections = parseSections(guide.content);
+  const userHasComments = Boolean(username && comments.some(c => c.authorUsername === username));
+  const sortedComments = [...comments].sort((a, b) => {
+    if (userHasComments) {
+      const aIsOwn = a.authorUsername === username;
+      const bIsOwn = b.authorUsername === username;
+      if (aIsOwn !== bIsOwn) return aIsOwn ? -1 : 1;
+    }
+
+    const likeDiff = (b.likes || 0) - (a.likes || 0);
+    if (likeDiff !== 0) return likeDiff;
+
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const renderComment = (c: Comment, isOwn: boolean) => (
+    <div key={c.id} className="comment-item">
+      <div className="comment-header">
+        {c.authorAvatarUrl ? (
+          <img src={c.authorAvatarUrl} alt="Avatar" className="comment-avatar-img" />
+        ) : (
+          <div className="comment-avatar">{c.authorUsername.charAt(0).toUpperCase()}</div>
+        )}
+        <div className="comment-author-block">
+          <div className="comment-author-row">
+            <span className="comment-author">{c.authorUsername}</span>
+            {isOwn && <span className="comment-own-badge">You</span>}
+          </div>
+          <span className="comment-date">
+            {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </span>
+        </div>
+        <div className="comment-card-actions">
+          {isOwn && (
+            <button className="comment-delete-btn" onClick={() => handleDeleteComment(c.id)}>
+              Delete
+            </button>
+          )}
+          <button className={`comment-vote-btn ${c.userVote === true ? 'active-like' : ''}`} onClick={() => handleCommentVote(c.id, true)}>
+            <ThumbsUp size={14} />
+            <span>{c.likes || 0}</span>
+          </button>
+          <button className={`comment-vote-btn ${c.userVote === false ? 'active-dislike' : ''}`} onClick={() => handleCommentVote(c.id, false)}>
+            <ThumbsDown size={14} />
+            <span>{c.dislikes || 0}</span>
+          </button>
+        </div>
+      </div>
+      <p className="comment-body">{c.content}</p>
+    </div>
+  );
 
   return (
     <div className="active-guide-page">
@@ -172,8 +327,8 @@ const GuideDetailPage = () => {
       {/* Guide Header */}
       <div className="active-guide-header">
         <div className="active-guide-tags">
-          <span className="ag-tag">{guide.game}</span>
-          {guide.difficulty && <span className="ag-tag ag-tag-difficulty">{guide.difficulty}</span>}
+          <span className="ag-tag">{formatGameName(guide.game)}</span>
+          {guide.difficulty && <span className={`ag-tag ag-tag-difficulty ${difficultyClass(guide.difficulty)}`}>{formatDifficulty(guide.difficulty)}</span>}
         </div>
         <h1 className="active-guide-title">{guide.title}</h1>
         <div className="active-guide-meta">
@@ -195,6 +350,10 @@ const GuideDetailPage = () => {
             <span>{guide.dislikes}</span>
           </button>
           <button className="ag-action-btn" onClick={handleShare}><Share2 size={15} /> Share</button>
+          <button className="ag-action-btn" onClick={handleToggleSave}>
+            <Star size={15} fill={guide.isSaved ? "currentColor" : "none"} className={guide.isSaved ? "text-yellow-400" : ""} /> 
+            {guide.isSaved ? 'Saved' : 'Save'}
+          </button>
           {!completed && (
             <button className="ag-action-btn ag-complete-btn" onClick={handleMarkComplete}>
               Mark Complete
@@ -237,36 +396,23 @@ const GuideDetailPage = () => {
         )}
 
         <div className="comments-list">
-          {comments.map(c => (
-            <div key={c.id} className="comment-item">
-              <div className="comment-header">
-                <div className="comment-avatar">{c.authorUsername.charAt(0).toUpperCase()}</div>
-                <div>
-                  <span className="comment-author">{c.authorUsername}</span>
-                  <span className="comment-date">{new Date(c.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-              <p className="comment-body">{c.content}</p>
-            </div>
-          ))}
+          {sortedComments.map(c => renderComment(c, c.authorUsername === username))}
         </div>
       </div>
 
       {/* Floating Toolbar */}
       <div className="floating-toolbar">
-        <button className="float-btn" title="Overview" onClick={() => navigate('/browse')}>
-          <Monitor size={18} />
+        <button className="float-btn" title="Back to top" aria-label="Back to top" onClick={scrollToTop}>
+          <ChevronUp size={20} />
         </button>
-        {isAuthor && (
-          <button className="float-btn" title="Edit Guide" onClick={() => navigate(`/edit-guide/${guide.id}`)}>
-            <Edit2 size={18} />
-          </button>
-        )}
-        <button className="float-btn" title="Community Feedback" onClick={() => navigate(`/community/${guide.id}`)}>
-          <MessageSquare size={18} />
+        <button className="float-btn" title="Go to bottom" aria-label="Go to bottom" onClick={scrollToBottom}>
+          <ChevronDown size={20} />
         </button>
-        <button className="float-btn" title="Share" onClick={handleShare}>
-          <Star size={18} />
+        <button className="float-btn" title={guide.isSaved ? 'Unsave guide' : 'Save guide'} aria-label={guide.isSaved ? 'Unsave guide' : 'Save guide'} onClick={handleToggleSave}>
+          <Star size={18} fill={guide.isSaved ? 'currentColor' : 'none'} />
+        </button>
+        <button className="float-btn" title="Share" aria-label="Share" onClick={handleShare}>
+          <Share2 size={18} />
         </button>
       </div>
     </div>

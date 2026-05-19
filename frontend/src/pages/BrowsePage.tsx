@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Search, BookOpen, ThumbsUp, Eye } from 'lucide-react';
 import './BrowsePage.css';
 
+const DEFAULT_GUIDE_IMAGE = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2070';
+
 const BrowsePage = () => {
   const navigate = useNavigate();
   const [guides, setGuides] = useState<any[]>([]);
@@ -45,15 +47,22 @@ const BrowsePage = () => {
     return colors[tag.toLowerCase()] || '#8892a4';
   };
 
+  const difficultyClass = (difficulty?: string) => {
+    return difficulty ? `difficulty-chip difficulty-${difficulty.toLowerCase()}` : '';
+  };
+
+  const formatDifficulty = (difficulty?: string) => {
+    if (!difficulty) return '';
+    return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+  };
+
   return (
     <div className="browse-page">
-      {/* Page Header */}
       <div className="browse-page-header">
         <h1 className="browse-title">Directory</h1>
         <p className="browse-subtitle">Discover expert guides from the community</p>
       </div>
 
-      {/* Search + Filters */}
       <div className="browse-controls">
         <div className="browse-search-box">
           <Search size={18} className="browse-search-icon" />
@@ -84,10 +93,9 @@ const BrowsePage = () => {
         </div>
       </div>
 
-      {/* Guide List */}
       {loading ? (
         <div className="browse-skeleton">
-          {[1,2,3,4].map(i => <div key={i} className="skeleton-row" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="skeleton-row" />)}
         </div>
       ) : guides.length === 0 ? (
         <div className="browse-empty">
@@ -99,13 +107,13 @@ const BrowsePage = () => {
           {guides.map((g: any) => {
             const tags: string[] = g.tags || [];
             const desc = g.content ? g.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...' : '';
+            const imageUrl = g.imageUrl || DEFAULT_GUIDE_IMAGE;
+            const score = (g.likes || 0) - (g.dislikes || 0);
             return (
               <div key={g.id} className="guide-list-card" onClick={() => navigate(`/guide/${g.id}`)}>
-                {/* Thumbnail */}
                 <div className="guide-thumb">
-                  <BookOpen size={24} />
+                  <img src={imageUrl} alt={g.title} />
                 </div>
-                {/* Content */}
                 <div className="guide-list-body">
                   <div className="guide-list-tags">
                     {tags.slice(0, 3).map(t => (
@@ -114,8 +122,8 @@ const BrowsePage = () => {
                       </span>
                     ))}
                     {g.difficulty && (
-                      <span className="guide-tag" style={{ color: tagColor(g.difficulty), borderColor: tagColor(g.difficulty) + '40', background: tagColor(g.difficulty) + '15' }}>
-                        {g.difficulty}
+                      <span className={`guide-tag ${difficultyClass(g.difficulty)}`}>
+                        {formatDifficulty(g.difficulty)}
                       </span>
                     )}
                   </div>
@@ -123,10 +131,10 @@ const BrowsePage = () => {
                   <p className="guide-list-desc">{desc}</p>
                   <div className="guide-list-meta">
                     <span>by <strong>{g.authorUsername}</strong></span>
-                    <span className="meta-sep">·</span>
+                    <span className="meta-sep" aria-hidden="true" />
                     <Eye size={13} /> <span>{g.views || 0}</span>
-                    <span className="meta-sep">·</span>
-                    <ThumbsUp size={13} /> <span>{g.likes || 0}</span>
+                    <span className="meta-sep" aria-hidden="true" />
+                    <ThumbsUp size={13} /> <span>{score}</span>
                   </div>
                 </div>
               </div>

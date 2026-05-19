@@ -77,4 +77,10 @@ public class GuideController {
             Authentication authentication) {
         return ResponseEntity.ok(guideService.voteGuide(id, request.isUpvote(), authentication.getName()));
     }
+
+    @PostMapping("/{id}/view")
+    public ResponseEntity<Void> incrementViews(@PathVariable Long id) {
+        guideService.incrementViews(id);
+        return ResponseEntity.ok().build();
+    }
 }

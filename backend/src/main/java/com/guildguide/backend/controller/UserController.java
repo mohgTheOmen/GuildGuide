@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final com.guildguide.backend.service.GuideService guideService;
+    private final com.guildguide.backend.service.CommentService commentService;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileDTO> getCurrentUser(Authentication authentication) {
@@ -34,5 +36,23 @@ public class UserController {
             @RequestBody PasswordChangeRequest request) {
         userService.changePassword(authentication.getName(), request);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me/saved-guides")
+    public ResponseEntity<java.util.List<com.guildguide.backend.dto.GuideResponse>> getSavedGuides(Authentication authentication) {
+        return ResponseEntity.ok(guideService.getSavedGuides(authentication.getName()));
+    }
+
+    @PostMapping("/me/saved-guides/{guideId}")
+    public ResponseEntity<Void> toggleSaveGuide(
+            @PathVariable Long guideId,
+            Authentication authentication) {
+        guideService.toggleSaveGuide(guideId, authentication.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me/comments")
+    public ResponseEntity<java.util.List<com.guildguide.backend.dto.CommentResponse>> getMyComments(Authentication authentication) {
+        return ResponseEntity.ok(commentService.getCommentsByAuthor(authentication.getName()));
     }
 }

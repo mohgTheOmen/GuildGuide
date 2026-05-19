@@ -28,4 +28,12 @@ public class User {
 
     @Column(columnDefinition = "TEXT")
     private String bio;
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_saved_guides",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "guide_id")
+    )
+    private java.util.List<Guide> savedGuides;
 }

@@ -19,4 +19,6 @@ public class GuideResponse {
     private Long dislikes;
     private String imageUrl;
     private Boolean userVote;
+    private Boolean isDraft;
+    private Boolean isSaved;
 }

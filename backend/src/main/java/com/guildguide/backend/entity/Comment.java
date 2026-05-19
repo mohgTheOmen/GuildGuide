@@ -24,4 +24,7 @@ public class Comment {
     private Guide guide;
 
     private LocalDateTime createdAt;
+
+    private Long likes = 0L;
+    private Long dislikes = 0L;
 }

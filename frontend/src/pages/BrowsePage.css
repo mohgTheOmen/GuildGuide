@@ -140,16 +140,24 @@
 
 /* Thumbnail */
 .guide-thumb {
-  width: 58px;
-  height: 58px;
-  background: rgba(0, 230, 230, 0.1);
-  border: 1px solid rgba(0, 230, 230, 0.2);
+  width: 96px;
+  height: 72px;
+  background: rgba(0, 230, 230, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--accent-cyan);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.guide-thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 /* Body */
@@ -204,4 +212,20 @@
 
 .meta-sep {
   color: rgba(255,255,255,0.15);
+}
+
+.browse-page .meta-sep::before {
+  content: "/";
+}
+
+@media (max-width: 640px) {
+  .guide-list-card {
+    gap: 0.9rem;
+    padding: 1rem;
+  }
+
+  .guide-thumb {
+    width: 76px;
+    height: 64px;
+  }
 }

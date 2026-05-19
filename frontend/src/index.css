@@ -76,6 +76,33 @@ select {
   appearance: none; /* Reset for custom styling if needed later */
 }
 
+.difficulty-chip {
+  color: var(--difficulty-color, #8892a4);
+  border-color: var(--difficulty-border-color, rgba(136, 146, 164, 0.4));
+  background: var(--difficulty-bg-color, rgba(136, 146, 164, 0.15));
+}
+
+.difficulty-beginner,
+.difficulty-easy {
+  --difficulty-color: #10b981;
+  --difficulty-border-color: rgba(16, 185, 129, 0.4);
+  --difficulty-bg-color: rgba(16, 185, 129, 0.15);
+}
+
+.difficulty-intermediate,
+.difficulty-medium {
+  --difficulty-color: #f59e0b;
+  --difficulty-border-color: rgba(245, 158, 11, 0.4);
+  --difficulty-bg-color: rgba(245, 158, 11, 0.15);
+}
+
+.difficulty-advanced,
+.difficulty-hard {
+  --difficulty-color: #ef4444;
+  --difficulty-border-color: rgba(239, 68, 68, 0.4);
+  --difficulty-bg-color: rgba(239, 68, 68, 0.15);
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
@@ -138,7 +165,35 @@ select {
   fill: var(--text-primary) !important;
 }
 
-/* Fix for Fullscreen Mode */
+/* Fix for Fullsize Mode */
 .jodit_fullsize {
   z-index: 1000 !important;
+}
+
+/* Fix Jodit tooltips, popups, and dropdowns */
+.jodit-popup,
+.jodit-tooltip,
+.jodit-ui-popup,
+.jodit-ui-dropdown {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.jodit-ui-button__text {
+  color: var(--text-primary) !important;
+}
+
+.jodit-ui-button:hover,
+.jodit-ui-button[aria-pressed="true"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+.jodit-toolbar-button__button[aria-pressed="true"] {
+  background-color: var(--bg-secondary) !important;
+  color: var(--accent-cyan) !important;
+}
+
+.jodit-toolbar-button__button[aria-pressed="true"] .jodit-icon {
+  fill: var(--accent-cyan) !important;
 }

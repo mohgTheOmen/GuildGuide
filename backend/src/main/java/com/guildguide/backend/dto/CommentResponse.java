@@ -8,6 +8,10 @@ public class CommentResponse {
     private Long id;
     private String content;
     private String authorUsername;
+    private String authorAvatarUrl;
     private Long guideId;
     private LocalDateTime createdAt;
+    private Long likes;
+    private Long dislikes;
+    private Boolean userVote;
 }

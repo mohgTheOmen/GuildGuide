@@ -43,6 +43,10 @@
   gap: 1rem;
 }
 
+.saved-guides-section {
+  margin-top: 2.5rem;
+}
+
 .section-label {
   display: flex;
   align-items: center;
@@ -161,6 +165,26 @@
   border-radius: 20px;
 }
 
+.saved-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(0, 230, 230, 0.12);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 230, 230, 0.28);
+  padding: 0.1rem 0.5rem;
+  border-radius: 20px;
+}
+
+.draft-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  padding: 0.1rem 0.5rem;
+  border-radius: 20px;
+}
+
 .my-guide-title {
   font-size: 1.1rem;
   font-weight: 700;
@@ -178,12 +202,25 @@
 
 .difficulty-badge {
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   text-transform: capitalize;
+  border: 1px solid;
+  border-radius: 20px;
+  padding: 0.2rem 0.55rem;
+}
+
+.difficulty-badge.difficulty-chip {
+  background: var(--difficulty-bg-color, rgba(136, 146, 164, 0.15));
+  border-color: var(--difficulty-border-color, rgba(136, 146, 164, 0.4));
+  color: var(--difficulty-color, #8892a4);
 }
 
 .meta-sep {
   color: rgba(255,255,255,0.2);
+}
+
+.meta-sep::before {
+  content: "/";
 }
 
 .progress-section {

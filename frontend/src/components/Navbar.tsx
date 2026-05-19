@@ -1,10 +1,16 @@
-import { Link } from 'react-router-dom';
-import { Gamepad2, LogOut, Zap, User, Settings, LayoutDashboard } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Gamepad2, LogOut, Zap, User, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
 const Navbar = () => {
   const { isLoggedIn, username, avatar, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <header className="navbar-container">
@@ -40,7 +46,7 @@ const Navbar = () => {
               <Link to="/settings" className="icon-btn" title="Settings">
                 <Settings size={18} />
               </Link>
-              <button onClick={logout} className="icon-btn logout-btn" title="Logout">
+              <button onClick={handleLogout} className="icon-btn logout-btn" title="Logout">
                 <LogOut size={18} />
               </button>
             </div>

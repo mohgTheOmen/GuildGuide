@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ArrowRight, Plus, BookOpen, Trash2, Edit2 } from 'lucide-react';
+import { ArrowRight, Plus, BookOpen, Trash2, Edit2, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './DashboardPage.css';
 
-// Progress is stored as { [guideId]: 0-100 } in localStorage
 const getGuideProgress = (id: number): number => {
   try {
     const map = JSON.parse(localStorage.getItem('guideProgress') || '{}');
@@ -17,39 +16,47 @@ interface Guide {
   id: number;
   title: string;
   game: string;
-  difficulty: string;
+  difficulty?: string;
   tags: string[];
   content: string;
   authorUsername: string;
   createdAt: string;
   views: number;
   likes: number;
+  isDraft?: boolean;
 }
 
 const DashboardPage = () => {
   const { username } = useAuth();
   const navigate = useNavigate();
   const [guides, setGuides] = useState<Guide[]>([]);
+  const [savedGuides, setSavedGuides] = useState<Guide[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMyGuides = async () => {
+    const fetchDashboardData = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:8080/api/guides/my', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setGuides(data);
+        const headers = { 'Authorization': `Bearer ${token}` };
+        const [myGuidesRes, savedGuidesRes] = await Promise.all([
+          fetch('http://localhost:8080/api/guides/my', { headers }),
+          fetch('http://localhost:8080/api/users/me/saved-guides', { headers })
+        ]);
+
+        if (myGuidesRes.ok) {
+          setGuides(await myGuidesRes.json());
+        }
+
+        if (savedGuidesRes.ok) {
+          setSavedGuides(await savedGuidesRes.json());
         }
       } catch {
-        console.error('Failed to fetch guides');
+        console.error('Failed to fetch dashboard data');
       } finally {
         setLoading(false);
       }
     };
-    fetchMyGuides();
+    fetchDashboardData();
   }, []);
 
   const handleDelete = async (id: number) => {
@@ -69,15 +76,27 @@ const DashboardPage = () => {
     }
   };
 
-  const difficultyColor = (d: string) => {
-    if (d === 'beginner') return '#10b981';
-    if (d === 'intermediate') return '#f59e0b';
-    return '#ef4444';
+  const formatDifficulty = (difficulty?: string) => {
+    if (!difficulty) return 'Unspecified';
+    return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
   };
+
+  const difficultyClass = (difficulty?: string) => {
+    return difficulty ? `difficulty-chip difficulty-${difficulty.toLowerCase()}` : '';
+  };
+
+  const formatGameName = (game?: string) => {
+    if (!game) return 'Unknown Game';
+    return game
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const renderMetaSeparator = () => <span className="meta-sep" aria-hidden="true" />;
 
   return (
     <div className="dashboard-page">
-      {/* Header */}
       <div className="dashboard-header">
         <div>
           <h1 className="dashboard-welcome">Welcome back{username ? `, ${username}` : ''}</h1>
@@ -88,7 +107,6 @@ const DashboardPage = () => {
         </button>
       </div>
 
-      {/* My Guides Section */}
       <div className="dashboard-section">
         <div className="section-label">
           <BookOpen size={16} />
@@ -111,38 +129,31 @@ const DashboardPage = () => {
           </div>
         ) : (
           <div className="my-guides-list">
-            {guides.map((guide, idx) => (
+            {guides.map((guide) => (
               <div key={guide.id} className="my-guide-card">
                 <div className="guide-card-left">
                   <div className="guide-card-header">
-                    <span className="game-name">{guide.game}</span>
-                    <span className="active-badge">Active</span>
+                    <span className="game-name">{formatGameName(guide.game)}</span>
+                    <span className={guide.isDraft ? 'draft-badge' : 'active-badge'}>
+                      {guide.isDraft ? 'Draft' : 'Active'}
+                    </span>
                   </div>
                   <h3 className="my-guide-title">{guide.title}</h3>
                   <div className="my-guide-meta">
-                    <span className="difficulty-badge" style={{ color: difficultyColor(guide.difficulty) }}>
-                      {guide.difficulty}
+                    <span className={`difficulty-badge ${difficultyClass(guide.difficulty)}`}>
+                      {formatDifficulty(guide.difficulty)}
                     </span>
-                    <span className="meta-sep">•</span>
+                    {renderMetaSeparator()}
                     <span className="meta-date">
                       {new Date(guide.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
-                    <span className="meta-sep">•</span>
+                    {renderMetaSeparator()}
                     <span className="meta-views">{guide.views} views</span>
-                  </div>
-                  <div className="progress-section">
-                    <div className="progress-header">
-                      <span>Training Progress</span>
-                      <span className="progress-pct">{getGuideProgress(guide.id)}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${getGuideProgress(guide.id)}%` }} />
-                    </div>
                   </div>
                 </div>
                 <div className="guide-card-right">
-                  <button className="continue-btn" onClick={() => navigate(`/guide/${guide.id}`)}>
-                    Continue Guide <ArrowRight size={16} />
+                  <button className="continue-btn" onClick={() => navigate(guide.isDraft ? `/edit-guide/${guide.id}` : `/guide/${guide.id}`)}>
+                    {guide.isDraft ? 'Edit Draft' : 'View Guide'} <ArrowRight size={16} />
                   </button>
                   <div className="guide-card-actions">
                     <button className="icon-action edit" onClick={() => navigate(`/edit-guide/${guide.id}`)}>
@@ -152,6 +163,66 @@ const DashboardPage = () => {
                       <Trash2 size={14} /> Delete
                     </button>
                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="dashboard-section saved-guides-section">
+        <div className="section-label">
+          <Star size={16} />
+          <span>Saved Guides</span>
+          <span className="guide-count">{savedGuides.length}</span>
+        </div>
+
+        {loading ? (
+          <div className="dashboard-skeleton">
+            {[1, 2].map(i => <div key={i} className="skeleton-card" />)}
+          </div>
+        ) : savedGuides.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon"><Star size={36} /></div>
+            <h3>No saved guides yet</h3>
+            <p>Save guides from the directory and continue reading them here</p>
+            <button className="btn btn-primary" onClick={() => navigate('/browse')}>
+              <BookOpen size={16} /> Browse Guides
+            </button>
+          </div>
+        ) : (
+          <div className="my-guides-list">
+            {savedGuides.map((guide) => (
+              <div key={guide.id} className="my-guide-card saved-guide-card">
+                <div className="guide-card-left">
+                  <div className="guide-card-header">
+                    <span className="game-name">{formatGameName(guide.game)}</span>
+                    <span className="saved-badge">Saved</span>
+                  </div>
+                  <h3 className="my-guide-title">{guide.title}</h3>
+                  <div className="my-guide-meta">
+                    <span>by <strong>{guide.authorUsername}</strong></span>
+                    {renderMetaSeparator()}
+                    <span className={`difficulty-badge ${difficultyClass(guide.difficulty)}`}>
+                      {formatDifficulty(guide.difficulty)}
+                    </span>
+                    {renderMetaSeparator()}
+                    <span className="meta-views">{guide.views} views</span>
+                  </div>
+                  <div className="progress-section">
+                    <div className="progress-header">
+                      <span>Reading Progress</span>
+                      <span className="progress-pct">{getGuideProgress(guide.id)}%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <div className="progress-fill" style={{ width: `${getGuideProgress(guide.id)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                <div className="guide-card-right">
+                  <button className="continue-btn" onClick={() => navigate(`/guide/${guide.id}`)}>
+                    Continue Reading <ArrowRight size={16} />
+                  </button>
                 </div>
               </div>
             ))}

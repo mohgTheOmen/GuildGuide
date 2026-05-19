@@ -13,6 +13,7 @@ const CreateGuidePage: React.FC = () => {
   const [tags, setTags] = useState('');
   const [content, setContent] = useState('');
   const [importUrl, setImportUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   
   const navigate = useNavigate();
@@ -79,30 +80,21 @@ const CreateGuidePage: React.FC = () => {
     }
   };
 
-  const handleSaveDraft = () => {
-    if (!title) {
-      toast.error('Please enter a title before saving a draft.');
-      return;
-    }
-    toast.success('Draft saved successfully!');
-    navigate('/dashboard');
-  };
-
-  const handlePublish = async (e: React.FormEvent) => {
+  const handleSaveDraft = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !game || !content || content === '<p><br></p>') {
-      toast.error('Please fill in all required fields (Title, Game, and Content).');
+    if (!title || title.length < 5) {
+      toast.error('Title must be at least 5 characters.');
       return;
     }
-    
-    if (title.length < 5) {
-      toast.error('Title must be at least 5 characters long.');
+    if (!game) {
+      toast.error('Please select a game.');
       return;
     }
 
-    const loadingToast = toast.loading('Publishing guide...');
+    const loadingToast = toast.loading('Saving draft...');
     try {
       const token = localStorage.getItem('token');
+      const trimmedImageUrl = imageUrl.trim();
       const response = await fetch('http://localhost:8080/api/guides', {
         method: 'POST',
         headers: {
@@ -114,20 +106,71 @@ const CreateGuidePage: React.FC = () => {
           game,
           difficulty,
           tags,
-          content
+          content,
+          imageUrl: trimmedImageUrl || undefined,
+          isDraft: true
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to publish guide');
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to save draft');
       }
+      toast.dismiss(loadingToast);
+      toast.success('Draft saved successfully!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      toast.error(error.message || 'Failed to save draft. Please try again.');
+    }
+  };
 
+  const handlePublish = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title || title.length < 5) {
+      toast.error('Title must be at least 5 characters.');
+      return;
+    }
+    if (!game) {
+      toast.error('Please select a game.');
+      return;
+    }
+    if (!content || content.replace(/<[^>]+>/g, '').trim() === '') {
+      toast.error('Please add some content to your guide.');
+      return;
+    }
+
+    const loadingToast = toast.loading('Publishing guide...');
+    try {
+      const token = localStorage.getItem('token');
+      const trimmedImageUrl = imageUrl.trim();
+      const response = await fetch('http://localhost:8080/api/guides', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title,
+          game,
+          difficulty,
+          tags,
+          content,
+          imageUrl: trimmedImageUrl || undefined,
+          isDraft: false
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to publish guide');
+      }
       toast.dismiss(loadingToast);
       toast.success('Guide published successfully!');
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       toast.dismiss(loadingToast);
-      toast.error('Failed to publish guide. Please try again.');
+      toast.error(error.message || 'Failed to publish guide. Please try again.');
     }
   };
 
@@ -141,7 +184,7 @@ const CreateGuidePage: React.FC = () => {
         <div className="ai-import-section">
           <div className="ai-import-header">
             <Sparkles size={20} className="ai-icon" />
-            <h3>Import with AI Intelligence</h3>
+            <h3>Import with AI</h3>
           </div>
           <p className="ai-import-desc">Paste a link to an external guide or article, and our AI will scrape, summarize, and format it for you instantly.</p>
           <div className="ai-import-input-wrapper">
@@ -166,7 +209,7 @@ const CreateGuidePage: React.FC = () => {
           </div>
         </div>
 
-        <form className="create-guide-form" onSubmit={handlePublish}>
+        <form className="create-guide-form">
           <div className="form-row">
             <div className="form-group flex-2">
               <label htmlFor="title">Guide Title</label>
@@ -185,6 +228,10 @@ const CreateGuidePage: React.FC = () => {
                 <option value="elden-ring">Elden Ring</option>
                 <option value="wow">World of Warcraft</option>
                 <option value="destiny-2">Destiny 2</option>
+                <option value="Valorant">Valorant</option>
+                <option value="Cyberpunk 2077">Cyberpunk 2077</option>
+                <option value="Hearts of Iron IV">Hearts of Iron IV</option>
+                <option value="Minecraft">Minecraft</option>
               </select>
             </div>
           </div>
@@ -210,6 +257,17 @@ const CreateGuidePage: React.FC = () => {
             </div>
           </div>
 
+          <div className="form-group">
+            <label htmlFor="imageUrl">Cover Picture URL</label>
+            <input 
+              type="url" 
+              id="imageUrl" 
+              placeholder="https://example.com/image.jpg" 
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+            />
+          </div>
+
           <div className="form-group" style={{ marginBottom: '2rem' }}>
             <label htmlFor="content">Guide Content</label>
             <JoditEditor
@@ -221,10 +279,9 @@ const CreateGuidePage: React.FC = () => {
           
           <div className="form-actions-row">
             <button type="button" className="btn btn-outline" onClick={handleSaveDraft}>Save Draft</button>
-            <button type="submit" className="btn btn-primary">Publish Guide</button>
+            <button type="button" className="btn btn-primary" onClick={handlePublish}>Publish Guide</button>
           </div>
-        </form>
-      </div>
+        </form>      </div>
     </div>
   );
 };

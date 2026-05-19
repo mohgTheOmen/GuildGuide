@@ -38,4 +38,15 @@ public class Guide {
     private Long dislikes = 0L;
 
     private String imageUrl;
+
+    @Column(name = "is_draft")
+    private Boolean draft = false;
+
+    public Boolean getIsDraft() {
+        return draft;
+    }
+
+    public void setIsDraft(Boolean draft) {
+        this.draft = draft;
+    }
 }

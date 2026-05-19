@@ -2,30 +2,44 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import JoditEditor from 'jodit-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import './EditGuidePage.css';
 
 const EditGuidePage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { username } = useAuth();
 
   const [title, setTitle] = useState('');
   const [game, setGame] = useState('');
   const [difficulty, setDifficulty] = useState('beginner');
   const [tags, setTags] = useState('');
   const [content, setContent] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchGuide = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/guides/${id}`);
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : undefined;
+        const response = await fetch(`http://localhost:8080/api/guides/${id}`, { headers });
         if (!response.ok) throw new Error('Guide not found');
         const data = await response.json();
+
+        const currentUsername = username || localStorage.getItem('username');
+        if (data.authorUsername !== currentUsername) {
+          toast.error('You can only edit guides you created.');
+          navigate(data.isDraft ? '/dashboard' : `/guide/${id}`, { replace: true });
+          return;
+        }
+
         setTitle(data.title);
         setGame(data.game);
         setDifficulty(data.difficulty || 'beginner');
         setTags(data.tags ? data.tags.join(', ') : '');
         setContent(data.content);
+        setImageUrl(data.imageUrl || '');
       } catch {
         toast.error('Could not load guide data.');
         navigate('/dashboard');
@@ -34,7 +48,7 @@ const EditGuidePage: React.FC = () => {
       }
     };
     fetchGuide();
-  }, [id]);
+  }, [id, navigate, username]);
 
   const config = useMemo(() => ({
     readonly: false,
@@ -69,11 +83,8 @@ const EditGuidePage: React.FC = () => {
     }
   };
 
-  const handleCancel = () => navigate('/dashboard');
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title || !game || !content || content === '<p><br></p>') {
+  const handleSave = async (isDraft: boolean) => {
+    if (!title || !game || (!isDraft && (!content || content === '<p><br></p>'))) {
       toast.error('Please fill in all required fields.');
       return;
     }
@@ -81,18 +92,20 @@ const EditGuidePage: React.FC = () => {
     const loadingToast = toast.loading('Saving changes...');
     try {
       const token = localStorage.getItem('token');
+      const trimmedImageUrl = imageUrl.trim();
       const response = await fetch(`http://localhost:8080/api/guides/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ title, game, difficulty, tags, content })
+        body: JSON.stringify({ title, game, difficulty, tags, content, imageUrl: trimmedImageUrl || undefined, isDraft })
       });
       if (!response.ok) throw new Error();
       toast.dismiss(loadingToast);
-      toast.success('Changes saved successfully!');
-      navigate(`/guide/${id}`);
+      toast.success(isDraft ? 'Draft saved successfully!' : 'Changes saved successfully!');
+      if (!isDraft) navigate(`/guide/${id}`);
+      else navigate('/dashboard');
     } catch {
       toast.dismiss(loadingToast);
       toast.error('Failed to save changes.');
@@ -107,7 +120,7 @@ const EditGuidePage: React.FC = () => {
         <h1 className="section-title">Edit Guide</h1>
         <p className="section-subtitle">Editing: {title}</p>
 
-        <form className="edit-guide-form" onSubmit={handleSave}>
+        <form className="edit-guide-form" onSubmit={(e) => { e.preventDefault(); handleSave(false); }}>
           <div className="form-row">
             <div className="form-group flex-2">
               <label htmlFor="title">Guide Title</label>
@@ -120,6 +133,10 @@ const EditGuidePage: React.FC = () => {
                 <option value="elden-ring">Elden Ring</option>
                 <option value="wow">World of Warcraft</option>
                 <option value="destiny-2">Destiny 2</option>
+                <option value="Valorant">Valorant</option>
+                <option value="Cyberpunk 2077">Cyberpunk 2077</option>
+                <option value="Hearts of Iron IV">Hearts of Iron IV</option>
+                <option value="Minecraft">Minecraft</option>
               </select>
             </div>
           </div>
@@ -139,6 +156,17 @@ const EditGuidePage: React.FC = () => {
             </div>
           </div>
 
+          <div className="form-group">
+            <label htmlFor="imageUrl">Cover Picture URL</label>
+            <input 
+              type="url" 
+              id="imageUrl" 
+              placeholder="https://example.com/image.jpg" 
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+            />
+          </div>
+
           <div className="form-group" style={{ marginBottom: '2rem' }}>
             <label htmlFor="content">Guide Content</label>
             <JoditEditor value={content} config={config} onBlur={newContent => setContent(newContent)} />
@@ -147,7 +175,7 @@ const EditGuidePage: React.FC = () => {
           <div className="form-actions-row">
             <button type="button" className="btn btn-outline btn-danger" onClick={handleDelete}>Delete Guide</button>
             <div className="right-actions">
-              <button type="button" className="btn btn-outline" onClick={handleCancel}>Cancel</button>
+              <button type="button" className="btn btn-outline" onClick={() => handleSave(true)}>Save Draft</button>
               <button type="submit" className="btn btn-primary">Save Changes</button>
             </div>
           </div>

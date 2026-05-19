@@ -17,8 +17,9 @@ public class CreateGuideRequest {
 
     private String tags;
 
-    @NotBlank
     private String content;
 
     private String imageUrl;
+
+    private Boolean isDraft;
 }
