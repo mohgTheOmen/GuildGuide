@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { isLoggedIn, username, avatar, logout } = useAuth();
+  const { isLoggedIn, username, avatar, role, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -29,6 +29,9 @@ const Navbar = () => {
                 Instant Action
               </Link>
               <Link to="/dashboard" className="nav-link">Dashboard</Link>
+              {role === 'ADMIN' && (
+                <Link to="/admin" className="nav-link" style={{ color: '#818cf8', fontWeight: 600 }}>Admin Panel</Link>
+              )}
             </>
           )}
         </nav>

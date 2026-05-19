@@ -16,6 +16,7 @@ import EditGuidePage from './pages/EditGuidePage';
 import DashboardPage from './pages/DashboardPage';
 import InstantActionPage from './pages/InstantActionPage';
 import SettingsPage from './pages/SettingsPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import GameHubPage from './pages/GameHubPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminRoute from './components/AdminRoute';
@@ -59,8 +60,7 @@ function App() {
               
               {/* Admin Routes */}
               <Route element={<AdminRoute />}>
-                {/* Admin Dashboard will go here */}
-                <Route path="/admin" element={<div style={{padding: '2rem', color: 'white'}}>Admin Dashboard Placeholder</div>} />
+                <Route path="/admin" element={<AdminDashboardPage />} />
               </Route>
 
               {/* Discovery & Error Handling Routes */}
