@@ -211,7 +211,11 @@ public class GuideService {
                 .orElseThrow(() -> new RuntimeException("Guide not found"));
 
         if (!guide.getAuthor().getUsername().equals(username)) {
-            throw new RuntimeException("Not authorized to delete this guide");
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            if (user.getRole() != com.guildguide.backend.entity.Role.ADMIN) {
+                throw new RuntimeException("Not authorized to delete this guide");
+            }
         }
 
         guideRepository.delete(guide);

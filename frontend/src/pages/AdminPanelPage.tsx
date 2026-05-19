@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, BookOpen, MessageSquare, Trash2, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
-import './AdminDashboardPage.css';
+import './AdminPanelPage.css';
 
 interface AdminStats {
   totalUsers: number;
@@ -19,7 +19,7 @@ interface Guide {
   views: number;
 }
 
-const AdminDashboardPage: React.FC = () => {
+const AdminPanelPage: React.FC = () => {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [guides, setGuides] = useState<Guide[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,11 +76,11 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="admin-dashboard" style={{ color: 'white', textAlign: 'center', marginTop: '2rem' }}>Loading Admin Panel...</div>;
+    return <div className="admin-panel" style={{ color: 'white', textAlign: 'center', marginTop: '2rem' }}>Loading Admin Panel...</div>;
   }
 
   return (
-    <div className="admin-dashboard">
+    <div className="admin-panel">
       <div className="admin-header">
         <h1><Shield size={28} style={{ display: 'inline', verticalAlign: 'bottom', marginRight: '0.5rem', color: '#818cf8' }} />Admin Panel</h1>
         <p>Platform Statistics and Content Moderation</p>
@@ -154,4 +154,4 @@ const AdminDashboardPage: React.FC = () => {
   );
 };
 
-export default AdminDashboardPage;
+export default AdminPanelPage;
